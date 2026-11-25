@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Модуль 1: Prompt Caching, контекст и экономика токенов — AI Academy</title>
+  <link rel="stylesheet" href="../lib/book.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --card-border: #1e293b;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.2);
+      --accent: #818cf8;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #070a12;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 4rem;
+    }
+
+    /* Header & Navigation */
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #7dd3fc;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-m01 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-track { background: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.3); }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      max-width: 720px;
+    }
+
+    /* Audio Player Card */
+    .audio-card {
+      background: linear-gradient(145deg, #131b2e, #0e1626);
+      border: 1px solid #1e293b;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .audio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .audio-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text);
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .play-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      transition: transform 0.15s, background-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.05);
+      background: #7dd3fc;
+    }
+
+    .progress-bar-container {
+      flex-grow: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      min-width: 85px;
+      text-align: right;
+    }
+
+    .speed-selector {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .speed-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    /* Content Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: clamp(1.3rem, 2.5vw, 1.6rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    p {
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+
+    /* Prefix Match Visualizer */
+    .visualizer-box {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+    }
+
+    .token-stream {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.75rem 0;
+    }
+
+    .token {
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .token-cached {
+      background: rgba(52, 211, 153, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #34d399;
+    }
+
+    .token-new {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .token-invalid {
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: #f87171;
+    }
+
+    /* Comparison Table */
+    .table-responsive {
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: #0d1527;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #1a2333;
+      color: #e2e8f0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Code Blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      margin: 1rem 0;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Interactive Calculator */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .calc-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .calc-input-group {
+      margin-bottom: 1rem;
+    }
+
+    .calc-input-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .calc-input-group span.val {
+      color: var(--primary);
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    .calc-results {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #162032;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+      padding-top: 0.75rem;
+    }
+
+    .result-label {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    .result-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .val-danger { color: var(--danger); }
+    .val-success { color: var(--success); font-size: 1.3rem; }
+
+    /* Quiz / Interactive Checks */
+    .quiz-item {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 0.85rem;
+      font-size: 0.95rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .quiz-opt {
+      background: #131b2e;
+      border: 1px solid #1e293b;
+      color: #cbd5e1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .quiz-opt:hover {
+      background: #1c263d;
+      border-color: #334155;
+    }
+
+    .quiz-opt.correct {
+      background: rgba(52, 211, 153, 0.15) !important;
+      border-color: #34d399 !important;
+      color: #34d399 !important;
+      font-weight: 600;
+    }
+
+    .quiz-opt.incorrect {
+      background: rgba(248, 113, 113, 0.15) !important;
+      border-color: #f87171 !important;
+      color: #f87171 !important;
+    }
+
+    .quiz-feedback {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      display: none;
+      line-height: 1.4;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+    }
+
+    .quiz-feedback.show-correct {
+      display: block;
+      background: rgba(52, 211, 153, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .quiz-feedback.show-incorrect {
+      display: block;
+      background: rgba(248, 113, 113, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    /* Lab Action Banner */
+    .lab-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .lab-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #0b0f19;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.95rem;
+      text-align: center;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .lab-btn:hover {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 3rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="top-bar">
+      <a href="../index.html" class="back-link">← Все уроки Академии</a>
+      <div class="badge-group">
+        <span class="badge badge-m01">Модуль 01</span>
+        <span class="badge badge-track">PRO / BASE</span>
+      </div>
+    </div>
+    <h1>Prompt Caching, контекст и экономика токенов</h1>
+    <p class="subtitle">Как работают KV-кэш, префиксное совпадение и почему архитектурный дизайн промпта снижает счета за API в 4–10 раз.</p>
+  </header>
+
+  <!-- Audio Player (Edge TTS ru-RU-DmitryNeural) -->
+  <div class="audio-card">
+    <div class="audio-header">
+      <div class="audio-title">
+        <span>🎧 Русская озвучка урока (Edge TTS · DmitryNeural)</span>
+      </div>
+      <div class="speed-selector">
+        <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
+        <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
+        <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+        <button class="speed-btn" onclick="setSpeed(2.0)">2x</button>
+      </div>
+    </div>
+    <audio id="lessonAudio" src="audio_summary.mp3" preload="metadata"></audio>
+    <div class="audio-controls">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Воспроизвести">▶</button>
+      <div class="progress-bar-container" id="progressContainer" onclick="seekAudio(event)">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="time-display" id="timeDisplay">00:00 / --:--</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Anatomy of Context Window -->
+  <div class="card">
+    <h2>1. Анатомия контекста и когнитивная стена</h2>
+    <p>Современные модели поддерживают контекст вплоть до 2 000 000 токенов (Google Gemini 1.5 Pro). Однако в реальных автономных агентах или длинных диалогах линейное увеличение контекста на каждом шаге приводит к двум фундаментальным проблемам:</p>
+    
+    <h3>1.1. Экспоненциальный рост расходов (Token Economics)</h3>
+    <p>Если спецификация MCP-инструментов и системная роль занимают 15 000 токенов, а агент делает 20 шагов в цикле ReAct, суммарно инференс обрабатывает свыше <strong>300 000 входных токенов</strong>, повторно пересчитывая одно и то же!</p>
+
+    <h3>1.2. Эффект «Lost in the Middle» (Context Decay)</h3>
+    <p>Внимание модели распределяется неравномерно. Информация, расположенная в середине сверхдлинного контекста, извлекается с меньшей точностью, чем факты в начале (*Primacy*) или конце (*Recency*).</p>
+  </div>
+
+  <!-- Section 2: How Prompt Caching Works -->
+  <div class="card">
+    <h2>2. Как устроен Prompt Caching под капотом</h2>
+    <p>При стандартном запросе графический процессор (GPU) производит умножение матриц для вычисления промежуточных векторов ключей и значений внимания — <strong>KV-Cache (Key-Value Cache)</strong>. Технология Prompt Caching сохраняет вычисленный KV-кэш в оперативной памяти инференс-кластера.</p>
+
+    <div class="visualizer-box">
+      <h3 style="margin-top: 0;">Визуализация: Принцип префиксного совпадения (Prefix Match)</h3>
+      <p style="font-size: 0.85rem; color: #94a3b8;">Кэш попадает в цель (Cache Hit) только если последовательность токенов от начала промпта идентична до последнего символа.</p>
+      
+      <p style="font-size: 0.8rem; margin-bottom: 0.2rem; color: #34d399;">✓ ПРАВИЛЬНО: Статический блок в начале (Cache Hit 90% скидка):</p>
+      <div class="token-stream">
+        <span class="token token-cached">System Prompt (10k)</span>
+        <span class="token token-cached">MCP Tools (5k)</span>
+        <span class="token token-cached">Knowledge Base (5k)</span>
+        <span class="token token-new">User: "Привет" (50)</span>
+      </div>
+
+      <p style="font-size: 0.8rem; margin: 0.8rem 0 0.2rem; color: #f87171;">✗ ОШИБКА: Динамический таймстемп в первой строке (Cache Miss! 0% скидки):</p>
+      <div class="token-stream">
+        <span class="token token-invalid">Time: 15:32:01 (4)</span>
+        <span class="token token-invalid">System Prompt (10k)</span>
+        <span class="token token-invalid">MCP Tools (5k)</span>
+        <span class="token token-new">User: "Привет" (50)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Comparison of LLM Providers -->
+  <div class="card">
+    <h2>3. Сравнение провайдеров в 2026 году</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Провайдер</th>
+            <th>Управление</th>
+            <th>Минимальный порог</th>
+            <th>Скидка на чтение</th>
+            <th>TTL (Время жизни)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Anthropic Claude</strong> (3.5 Sonnet / Haiku)</td>
+            <td>Явные брейкпоинты (до 4 точек)</td>
+            <td>1 024 токена (Sonnet) / 2 048 (Haiku)</td>
+            <td><strong style="color: #34d399;">90% скидка</strong></td>
+            <td>5 мин (rolling)</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI</strong> (GPT-4o, o3-mini)</td>
+            <td>Автоматическое (блоки по 128 токенов)</td>
+            <td>1 024 токена</td>
+            <td><strong style="color: #38bdf8;">50% скидка</strong></td>
+            <td>Динамический (5–10 мин)</td>
+          </tr>
+          <tr>
+            <td><strong>Google Gemini</strong> (1.5 Pro / Flash)</td>
+            <td>Явный объект <code>CachedContent</code></td>
+            <td>32 768 токенов</td>
+            <td><strong style="color: #818cf8;">75% скидка</strong></td>
+            <td>Фиксированный (от 1 часа)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Синтаксис Anthropic с Breakpoint:</h3>
+    <pre><code>import anthropic
+
+client = anthropic.Anthropic()
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    system=[{
+        "type": "text",
+        "text": "Статическое ТЗ и спецификация инструментов...",
+        "cache_control": {"type": "ephemeral"}  # Контрольная точка кэша
+    }],
+    messages=[{"role": "user", "content": "Выполни анализ..."}]
+)
+# response.usage.cache_read_input_tokens -> количество токенов со скидкой 90%!</code></pre>
+  </div>
+
+  <!-- Section 4: Interactive ROI Calculator -->
+  <div class="card">
+    <h2>4. Интерактивный калькулятор экономии токенов</h2>
+    <p>Настройте параметры вашей системы и посмотрите реальную экономию бюджета и снижение задержки:</p>
+
+    <div class="calc-grid">
+      <div class="calc-controls">
+        <div class="calc-input-group">
+          <label>Статический контекст (роль + инструменты): <span class="val" id="lblContext">20 000</span> токенов</label>
+          <input type="range" id="rngContext" min="2000" max="60000" step="1000" value="20000" oninput="calculateSavings()">
+        </div>
+
+        <div class="calc-input-group">
+          <label>Количество шагов сессии (ReAct loop): <span class="val" id="lblSteps">12</span> шагов</label>
+          <input type="range" id="rngSteps" min="2" max="30" step="1" value="12" oninput="calculateSavings()">
+        </div>
+
+        <div class="calc-input-group">
+          <label>Провайдер модели:</label>
+          <select id="selModel" style="width: 100%; padding: 0.6rem; background: #090e1a; border: 1px solid #1e293b; color: #fff; border-radius: 6px;" onchange="calculateSavings()">
+            <option value="claude-sonnet">Claude 3.5 Sonnet (База $3/M, Чтение кэша $0.30/M)</option>
+            <option value="gpt-4o">OpenAI GPT-4o (База $2.50/M, Скидка 50%)</option>
+            <option value="gemini-flash">Gemini 1.5 Flash (База $0.075/M, Скидка 75%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-row">
+          <span class="result-label">Стоимость без кэша:</span>
+          <span class="result-val val-danger" id="resNoCache">$0.72</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Стоимость с Prompt Caching:</span>
+          <span class="result-val" style="color: #38bdf8;" id="resWithCache">$0.18</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Чистая экономия бюджета:</span>
+          <span class="result-val val-success" id="resSaved">$0.54 (75%)</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Ускорение отклика (TTFT):</span>
+          <span class="result-val" style="color: #fbbf24;" id="resLatency">~4.2x быстрее</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Knowledge Check (Quiz) -->
+  <div class="card">
+    <h2>5. Проверка понимания (Quick Checks)</h2>
+    
+    <!-- Question 1 -->
+    <div class="quiz-item" id="q1">
+      <div class="quiz-question">1. Куда правильнее всего поместить текущую метку времени (<code>datetime.now()</code>) в промпте агента?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(1, 0, false)">В самую первую строку системного промпта, чтобы агент всегда знал дату</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 1, true)">В самое последнее сообщение пользователя, в конец запроса</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 2, false)">Сразу после описания MCP-инструментов, перед историей диалога</button>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+    </div>
+
+    <!-- Question 2 -->
+    <div class="quiz-item" id="q2">
+      <div class="quiz-question">2. Какую скидку на входные кэшированные токены предоставляет Anthropic для Claude 3.5 Sonnet?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(2, 0, false)">50% скидка на чтение</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 1, false)">75% скидка на чтение</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 2, true)">90% скидка на чтение (чтение стоит 10% от базового инпута)</button>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+
+    <!-- Question 3 -->
+    <div class="quiz-item" id="q3">
+      <div class="quiz-question">3. Что происходит с временем жизни кэша (TTL) в Anthropic при каждом повторном попадании в кэш?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(3, 0, true)">Таймер сбрасывается и продлевается еще на 5 минут (Rolling TTL)</button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 1, false)">Кэш жестко сгорает через 5 минут после первого создания, независимо от вызовов</button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 2, false)">Кэш сразу удаляется из памяти GPU, освобождая место для других пользователей</button>
+      </div>
+      <div class="quiz-feedback" id="q3-fb"></div>
+    </div>
+  </div>
+
+  <!-- Action: Break-and-Fix Lab -->
+  <div class="lab-banner">
+    <div>
+      <h3 style="margin: 0 0 0.5rem; color: #fff;">Практическая лаборатория: «Сломанный кэш»</h3>
+      <p style="margin: 0; font-size: 0.9rem;">В папке <code>labs/lab01_prompt_caching/</code> подготовлен агент с утечкой контекста и диким перерасходом лимитов. Ваша задача — расставить точки останова и снизить стоимость работы минимум в 4 раза.</p>
+    </div>
+    <a href="../index.html" class="lab-btn">Вернуться к списку модулей</a>
+  </div>
+
+  <footer>
+    <p>AI_Academy · Персональная саморазвивающаяся система обучения нейросетям</p>
+  </footer>
+</div>
+
+<script>
+  // Audio Player Logic
+  const audio = document.getElementById('lessonAudio');
+  const playBtn = document.getElementById('playBtn');
+  const progressBar = document.getElementById('progressBar');
+  const timeDisplay = document.getElementById('timeDisplay');
+
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+      playBtn.textContent = '❚❚';
+    } else {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = pct + '%';
+    timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+  });
+
+  audio.addEventListener('ended', () => {
+    playBtn.textContent = '▶';
+    progressBar.style.width = '0%';
+  });
+
+  function seekAudio(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = pos * audio.duration;
+  }
+
+  function setSpeed(speed) {
+    audio.playbackRate = speed;
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', parseFloat(btn.textContent) === speed);
+    });
+  }
+
+  function formatTime(sec) {
+    if (isNaN(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // Calculator Logic
+  function calculateSavings() {
+    const ctx = parseInt(document.getElementById('rngContext').value);
+    const steps = parseInt(document.getElementById('rngSteps').value);
+    const model = document.getElementById('selModel').value;
+
+    document.getElementById('lblContext').textContent = ctx.toLocaleString();
+    document.getElementById('lblSteps').textContent = steps;
+
+    let baseInputRate, cacheWriteRate, cacheReadRate;
+    if (model === 'claude-sonnet') {
+      baseInputRate = 3.0 / 1000000;
+      cacheWriteRate = 3.75 / 1000000;
+      cacheReadRate = 0.30 / 1000000;
+    } else if (model === 'gpt-4o') {
+      baseInputRate = 2.5 / 1000000;
+      cacheWriteRate = 2.5 / 1000000;
+      cacheReadRate = 1.25 / 1000000;
+    } else { // gemini-flash
+      baseInputRate = 0.075 / 1000000;
+      cacheWriteRate = 0.075 / 1000000;
+      cacheReadRate = 0.01875 / 1000000;
+    }
+
+    const avgUserTokens = 400;
+    
+    // Without cache: each step sends full context + delta
+    let costNoCache = 0;
+    for (let i = 1; i <= steps; i++) {
+      costNoCache += (ctx + i * avgUserTokens) * baseInputRate;
+    }
+
+    // With cache: step 1 writes cache, steps 2..N read cache
+    let costWithCache = (ctx + avgUserTokens) * cacheWriteRate;
+    for (let i = 2; i <= steps; i++) {
+      costWithCache += ctx * cacheReadRate + (i * avgUserTokens) * baseInputRate;
+    }
+
+    const saved = Math.max(0, costNoCache - costWithCache);
+    const pct = Math.round((saved / costNoCache) * 100);
+
+    document.getElementById('resNoCache').textContent = '$' + costNoCache.toFixed(4);
+    document.getElementById('resWithCache').textContent = '$' + costWithCache.toFixed(4);
+    document.getElementById('resSaved').textContent = '$' + saved.toFixed(4) + ' (' + pct + '%)';
+    document.getElementById('resLatency').textContent = '~' + (steps > 5 ? '4.5x' : '2.8x') + ' быстрее';
+  }
+
+  // Quiz Logic
+  const feedbackData = {
+    1: {
+      correct: 'Верно! Любая динамическая переменная в начале промпта изменит префикс и сбросит KV-кэш для всех последующих блоков. Динамические данные ставятся строго в конец.',
+      incorrect: 'Неверно. Если поместить изменяющуюся строку (время/ID) в начало, префикс изменится, и KV-кэш станет недействительным. Запрос пройдет по полной стоимости!'
+    },
+    2: {
+      correct: 'Абсолютно точно! Anthropic берет +25% за первичную запись блока в кэш, но при каждом последующем чтении предоставляет рекордную скидку 90% ($0.30 вместо $3.00 на 1M токенов).',
+      incorrect: 'Неверно. Anthropic предоставляет 90% скидку на чтение из кэша (вы платите всего 10% от базового тарифа).'
+    },
+    3: {
+      correct: 'Правильно! Кэш Anthropic использует «rolling» модель: каждое обращение с попаданием в кэш перезапускает 5-минутный таймер заново, позволяя сессиям жить часами при регулярной активности.',
+      incorrect: 'Неверно. Каждое попадание в кэш обновляет таймер на следующие 5 минут (Rolling TTL).'
+    }
+  };
+
+  function checkAnswer(qNum, optIdx, isCorrect) {
+    const parent = document.getElementById('q' + qNum);
+    const opts = parent.querySelectorAll('.quiz-opt');
+    const fb = document.getElementById('q' + qNum + '-fb');
+
+    opts.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === optIdx) {
+        btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+      }
+    });
+
+    fb.className = 'quiz-feedback ' + (isCorrect ? 'show-correct' : 'show-incorrect');
+    fb.textContent = isCorrect ? feedbackData[qNum].correct : feedbackData[qNum].incorrect;
+  }
+
+  // Initial calculation run
+  calculateSavings();
+</script>
+</body>
+</html>

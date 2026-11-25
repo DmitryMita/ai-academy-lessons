@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>M99: Защита от блокировок, миграция истории и Claude API — AI Academy</title>
+  <link rel="stylesheet" href="../lib/book.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --card-border: #1e293b;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.2);
+      --accent: #818cf8;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #070a12;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1.15rem 4rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .back-link:hover { color: #7dd3fc; }
+
+    .badge-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-m99 { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); }
+    .badge-pro { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    h1 {
+      font-size: clamp(1.65rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      max-width: 760px;
+    }
+
+    /* Audio Card */
+    .audio-card {
+      background: linear-gradient(145deg, #131b2e, #0e1626);
+      border: 1px solid #1e293b;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .audio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .audio-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text);
+    }
+
+    .audio-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: nowrap;
+    }
+
+    .play-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+
+    .play-btn:hover { transform: scale(1.05); background: #7dd3fc; }
+
+    .progress-bar-container {
+      flex-grow: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      min-width: 88px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .speed-selector { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+    .speed-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    /* Cards & Typography */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: clamp(1.15rem, 3vw, 1.75rem);
+      margin-bottom: 1.75rem;
+    }
+
+    h2 {
+      font-size: clamp(1.25rem, 2.5vw, 1.55rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 1.15rem 0 0.5rem;
+    }
+
+    p { color: #cbd5e1; margin-bottom: 0.9rem; font-size: 0.95rem; }
+
+    ul.cheat-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin: 0.75rem 0 1rem;
+    }
+
+    ul.cheat-list li {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+
+    ul.cheat-list li strong { color: var(--primary); }
+
+    /* Interactive Architecture Switcher */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .mode-tab {
+      background: #090e1a;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mode-tab.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .mode-tab.danger.active {
+      background: rgba(248, 113, 113, 0.16);
+      border-color: var(--danger);
+      color: #fecaca;
+    }
+
+    .arch-box {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .arch-svg {
+      width: 100%;
+      max-width: 860px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .arch-caption {
+      margin-top: 0.8rem;
+      font-size: 0.86rem;
+      color: #94a3b8;
+      border-top: 1px solid #1e293b;
+      padding-top: 0.7rem;
+    }
+
+    /* Migration Target Panel */
+    .target-panel {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .target-badge-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.65rem;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .pill-green { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.35); }
+    .pill-amber { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); }
+    .pill-red { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.35); }
+
+    /* Tables */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    th {
+      background: #0d1527;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid #1a2333;
+      color: #e2e8f0;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* Code */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.95rem;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      margin: 0.75rem 0;
+      line-height: 1.5;
+      max-width: 100%;
+    }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.84em;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.12rem 0.32rem;
+      border-radius: 4px;
+      word-break: break-word;
+    }
+
+    pre code { background: none; padding: 0; color: inherit; word-break: normal; }
+
+    /* Calculator */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 680px) {
+      .calc-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .calc-input-group { margin-bottom: 1rem; }
+
+    .calc-input-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      gap: 0.5rem;
+    }
+
+    .calc-input-group span.val {
+      color: var(--primary);
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .calc-results {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #162032;
+      gap: 0.5rem;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-label { color: #94a3b8; font-size: 0.83rem; }
+    .result-val { font-family: 'Fira Code', monospace; font-size: 1rem; font-weight: 700; text-align: right; }
+    .val-danger { color: var(--danger); }
+    .val-success { color: var(--success); }
+    .val-warn { color: var(--warning); }
+
+    /* Quiz */
+    .quiz-item {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 0.8rem;
+      font-size: 0.93rem;
+    }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .quiz-opt {
+      background: #131b2e;
+      border: 1px solid #1e293b;
+      color: #cbd5e1;
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .quiz-opt:hover { background: #1c263d; border-color: #334155; }
+    .quiz-opt.correct { background: rgba(52, 211, 153, 0.15) !important; border-color: #34d399 !important; color: #34d399 !important; font-weight: 600; }
+    .quiz-opt.incorrect { background: rgba(248, 113, 113, 0.15) !important; border-color: #f87171 !important; color: #f87171 !important; }
+
+    .quiz-feedback {
+      margin-top: 0.7rem;
+      font-size: 0.84rem;
+      display: none;
+      line-height: 1.45;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+    }
+
+    .quiz-feedback.show-correct { display: block; background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .quiz-feedback.show-incorrect { display: block; background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    /* Banner */
+    .lab-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .lab-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #0b0f19;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .lab-btn:hover { background: #7dd3fc; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="top-bar">
+      <a href="../index.html" class="back-link">← Все уроки Академии</a>
+      <div class="badge-group">
+        <span class="badge badge-m99">Модуль M99 · Персональный запрос</span>
+        <span class="badge badge-pro">Трек PRO</span>
+      </div>
+    </div>
+    <h1>Защита от блокировки, миграция истории и Claude через API</h1>
+    <p class="subtitle">Опорная шпаргалка инженера: как убрать единую точку отказа, выгрузить историю в другую нейросеть и подключить Claude API без иллюзий о рисках и лимитах.</p>
+  </header>
+
+  <!-- Audio Podcast Player -->
+  <div class="audio-card">
+    <div class="audio-header">
+      <div class="audio-title">
+        <span>🎧 Подкаст наставника (Edge TTS · DmitryNeural · темп -15%)</span>
+      </div>
+      <div class="speed-selector">
+        <button class="speed-btn" onclick="setSpeed(0.85)">0.85x</button>
+        <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
+        <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
+        <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+      </div>
+    </div>
+    <p class="audio-note">Нажмите Play: наставник объясняет логику на бытовых аналогиях и примерах проектов агентства, пока вы смотрите на схемы и таблицы ниже.</p>
+    <audio id="lessonAudio" src="audio_summary.mp3" preload="metadata"></audio>
+    <div class="audio-controls">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Воспроизвести">▶</button>
+      <div class="progress-bar-container" id="progressContainer" onclick="seekAudio(event)">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="time-display" id="timeDisplay">00:00 / --:--</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Vendor Lock-in & Architecture -->
+  <div class="card">
+    <h2>1. Архитектура устойчивости: Ловушка веб-чата vs Суверенный стек</h2>
+    <ul class="cheat-list">
+      <li><strong>Single Point of Failure (SPOF):</strong> Когда инструкции (<em>Projects</em>), память и история диалогов заперты внутри <code>claude.ai</code>, блокировка аккаунта мгновенно обнуляет рабочий контекст.</li>
+      <li><strong>Принцип «Own Your Context»:</strong> Вся долговременная память (регламенты, схемы БД, история решений) хранится у вас в Markdown/Git (как <code>knowledge_base/</code>) или локальной БД.</li>
+      <li><strong>Слой абстракции (API Gateway):</strong> Код ботов, парсеров и агентов обращается к моделям через единый интерфейс (<code>OpenRouter</code> / <code>LiteLLM</code>), позволяя сменить провайдера за 1 строчку в <code>.env</code>.</li>
+    </ul>
+
+    <div class="mode-tabs">
+      <button class="mode-tab danger active" id="tabSpoF" onclick="setArchMode('spof')">✗ Хрупкая схема (Vendor Lock-in)</button>
+      <button class="mode-tab" id="tabResilient" onclick="setArchMode('resilient')">✓ Устойчивый стек (Own Context + Fallback)</button>
+    </div>
+
+    <div class="arch-box">
+      <svg class="arch-svg" viewBox="0 0 820 220" id="archSvg" role="img" aria-label="Схема архитектуры устойчивости"></svg>
+      <div class="arch-caption" id="archCaption"></div>
+    </div>
+  </div>
+
+  <!-- Section 2: Export & Migration -->
+  <div class="card">
+    <h2>2. Подготовка к бану и перенос истории (<code>conversations.json</code>)</h2>
+    <p>Выгрузка в Claude: <code>Settings → Privacy → Export data</code>. Внутри архива лежит файл <code>conversations.json</code> (массив диалогов с полями <code>uuid</code>, <code>name</code>, <code>created_at</code>, <code>chat_messages[]</code>, где <code>sender</code> = <code>"human"</code> или <code>"assistant"</code>).</p>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectTarget('openwebui', this)">Open WebUI (Self-hosted)</button>
+      <button class="mode-tab" onclick="selectTarget('librechat', this)">LibreChat</button>
+      <button class="mode-tab" onclick="selectTarget('gemini', this)">Gemini / NotebookLM</button>
+      <button class="mode-tab" onclick="selectTarget('chatgpt', this)">ChatGPT (OpenAI)</button>
+    </div>
+
+    <div class="target-panel" id="targetPanel"></div>
+
+    <h3>Скрипт авто-архивации <code>conversations.json → Markdown (.md)</code></h3>
+    <pre><code>import json
+from pathlib import Path
+
+export_data = json.loads(Path("conversations.json").read_text(encoding="utf-8"))
+out_dir = Path("archive_md")
+out_dir.mkdir(exist_ok=True)
+
+for conv in export_data:
+    title = (conv.get("name") or conv["uuid"][:8]).replace("/", "-")
+    lines = [f"# {title}\n", f"- Created: `{conv.get('created_at')}`\n\n---\n"]
+    for msg in conv.get("chat_messages", []):
+        role = "USER" if msg.get("sender") == "human" else "CLAUDE"
+        lines.append(f"### {role}\n{msg.get('text', '')}\n\n")
+    (out_dir / f"{conv['uuid'][:8]}_{title[:40]}.md").write_text("".join(lines), encoding="utf-8")</code></pre>
+  </div>
+
+  <!-- Section 3: Claude API in Unsupported Regions -->
+  <div class="card">
+    <h2>3. Claude через API в неподдерживаемых странах: пути и риски</h2>
+    <p>Официальная политика Anthropic (<strong>Supported Regions Policy</strong>) едина для <code>claude.ai</code>, <code>Claude Code</code> и <code>Console API</code>: ограничения действуют по физическому местоположению, регистрации компании и контролю ≥50% из неподдерживаемых юрисдикций.</p>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Маршрут доступа</th>
+            <th>Как работает аутентификация</th>
+            <th>Плюсы</th>
+            <th>Риски и ограничения</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Прямой Anthropic Console</strong><br><code>api.anthropic.com/v1/messages</code></td>
+            <td>Заголовки <code>x-api-key</code> + <code>anthropic-version</code></td>
+            <td>Все новые фичи в день релиза: Prompt Caching, Message Batches (-50%), Files API</td>
+            <td>Нарушение ToS из неподдерживаемой страны; риск блокировки Console и заморозки предоплаченного баланса</td>
+          </tr>
+          <tr>
+            <td><strong>2. Единый шлюз (OpenRouter)</strong><br><code>openrouter.ai/api/v1</code></td>
+            <td>Ключ <code>Bearer</code> (OpenAI SDK формат)</td>
+            <td>Оплата единым балансом, доступ к Claude + GPT + Gemini, авто-Fallback и проброс <code>cache_control</code></td>
+            <td>Небольшая наценка/комиссия шлюза; завязка на стабильность посредника (решается через LiteLLM)</td>
+          </tr>
+          <tr>
+            <td><strong>3. Облака (AWS Bedrock / GCP Vertex AI)</strong></td>
+            <td>AWS IAM (SigV4) или GCP ADC</td>
+            <td>Корпоративный SLA, изоляция данных (Data Residency) в регионе EU/US</td>
+            <td>Сложный онбординг юрлица; часть фич (Files API, Batches) приходит позже или отсутствует</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectCodeTab('openrouter', this)">OpenAI SDK → OpenRouter + Fallback (Рекомендуется)</button>
+      <button class="mode-tab" onclick="selectCodeTab('direct', this)">Прямой Anthropic SDK + Headers</button>
+    </div>
+
+    <pre id="codeBlock"></pre>
+  </div>
+
+  <!-- Section 4: Limitations & Budget Calculator -->
+  <div class="card">
+    <h2>4. Ограничения API vs подписка Claude.ai Pro ($20/мес)</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Критерий</th>
+            <th>Claude.ai Pro ($20/мес)</th>
+            <th>Claude API (Direct / OpenRouter)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Состояние (State)</strong></td>
+            <td>Авто-история + кросс-чат <em>Memory</em></td>
+            <td><strong>Stateless:</strong> сервер ничего не помнит — передаёте весь массив <code>messages</code> каждый раз</td>
+          </tr>
+          <tr>
+            <td><strong>Projects &amp; Artifacts</strong></td>
+            <td>Встроены в интерфейс (папки, превью React/SVG)</td>
+            <td><strong>Отсутствуют:</strong> заменяются System Prompt + Prompt Caching / RAG и своим UI (или Open WebUI)</td>
+          </tr>
+          <tr>
+            <td><strong>Лимиты нагрузки</strong></td>
+            <td>Жёсткие 5-часовые окна и недельные капы</td>
+            <td>Тройной лимит по Tier (<em>Start / Build / Scale</em>): <strong>RPM</strong>, <strong>ITPM</strong>, <strong>OTPM</strong> + Token Bucket (burst вызовет <code>429</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>Защита бюджета</strong></td>
+            <td>Потолок цены — $20/мес</td>
+            <td>Без <em>Spend Limit</em> баг в цикле агента сожжёт весь баланс за минуты</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Калькулятор перехода: Подписка Pro vs Stateless API</h3>
+    <div class="calc-grid">
+      <div>
+        <div class="calc-input-group">
+          <label>Сообщений в день (диалоги / шаги агента): <span class="val" id="lblMsgs">40</span></label>
+          <input type="range" id="rngMsgs" min="10" max="200" step="10" value="40" oninput="calcApiCost()">
+        </div>
+        <div class="calc-input-group">
+          <label>Средний объём контекста (Projects + история): <span class="val" id="lblCtx">15 000</span> токенов</label>
+          <input type="range" id="rngCtx" min="2000" max="60000" step="1000" value="15000" oninput="calcApiCost()">
+        </div>
+        <div class="calc-input-group">
+          <label>Режим кэширования:</label>
+          <select id="selCache" style="width: 100%; padding: 0.55rem; background: #090e1a; border: 1px solid #1e293b; color: #fff; border-radius: 6px;" onchange="calcApiCost()">
+            <option value="none">Без Prompt Caching (100% цены инпута)</option>
+            <option value="cached" selected>С Prompt Caching (скидка 90% на статический блок)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-row">
+          <span class="result-label">Подписка Claude.ai Pro:</span>
+          <span class="result-val val-success">$20.00 / мес</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">API (Claude Sonnet, ~22 раб. дня):</span>
+          <span class="result-val" id="resApiCost" style="color: #38bdf8;">$0.00 / мес</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Экономия от Prompt Caching:</span>
+          <span class="result-val val-warn" id="resCacheDiff">$0.00</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Вердикт архитектора:</span>
+          <span class="result-val" id="resVerdict" style="font-size: 0.85rem;">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Quick Checks -->
+  <div class="card">
+    <h2>5. Проверка понимания (Quick Checks)</h2>
+
+    <div class="quiz-item" id="q1">
+      <div class="quiz-question">1. Вы скачали <code>conversations.json</code> из Claude перед риском блокировки. Какой способ переезда даст вам полноценный импорт веток чатов, а не просто чтение текста?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(1, 0, false)">Загрузить <code>conversations.json</code> напрямую в настройки веб-версии ChatGPT</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 1, true)">Конвертировать через скрипт в формат Open WebUI (<code>parentId</code>/<code>childrenIds</code>) или LibreChat, а резервную копию держать в Markdown</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 2, false)">Отправить файл в один API-запрос с флагом <code>import_history=true</code></button>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q2">
+      <div class="quiz-question">2. Почему при переходе с <code>claude.ai</code> на API расходы на длинные диалоги резко растут, если не включить Prompt Caching?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(2, 0, false)">Потому что API принудительно включает платное хранение базы знаний на сервере</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 1, false)">Потому что на API минимальный размер ответа — 4096 токенов</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 2, true)">Потому что API работает в режиме Stateless: на каждом шаге вы обязаны пересылать всю историю <code>messages</code> заново</button>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q3">
+      <div class="quiz-question">3. Как архитектурно защитить Telegram-бота или парсер агентства от внезапного бана или ошибки <code>429</code> у одного провайдера LLM?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(3, 0, true)">Использовать слой абстракции (OpenRouter / LiteLLM) с Fallback-цепочкой на резервные модели (Gemini/GPT) и жёстким Spend Limit</button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 1, false)">Пополнить прямой аккаунт Anthropic Console сразу на $5000, чтобы получить Scale Tier</button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 2, false)">Убрать заголовок <code>anthropic-version</code>, чтобы обойти лимиты RPM и ITPM</button>
+      </div>
+      <div class="quiz-feedback" id="q3-fb"></div>
+    </div>
+  </div>
+
+  <div class="lab-banner">
+    <div>
+      <h3 style="margin: 0 0 0.4rem; color: #fff;">Боевой чек-лист для проектов агентства</h3>
+      <p style="margin: 0; font-size: 0.88rem;">1) Сделайте экспорт <code>conversations.json</code> и сохраните ключевые ТЗ в <code>knowledge_base/</code>. 2) Настройте OpenRouter/LiteLLM адаптер с Fallback-моделью в <code>.env</code>. 3) Поставьте жёсткий Spend Limit на каждый API-ключ и включите Prompt Caching.</p>
+    </div>
+    <a href="../index.html" class="lab-btn">Вернуться к библиотеке уроков</a>
+  </div>
+
+  <footer>
+    <p>AI_Academy · Модуль M99 · Персональный трек PRO</p>
+  </footer>
+</div>
+
+<script>
+  // Audio Player
+  const audio = document.getElementById('lessonAudio');
+  const playBtn = document.getElementById('playBtn');
+  const progressBar = document.getElementById('progressBar');
+  const timeDisplay = document.getElementById('timeDisplay');
+
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+      playBtn.textContent = '❚❚';
+    } else {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progressBar.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+    timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    if (audio.duration) {
+      timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    playBtn.textContent = '▶';
+    progressBar.style.width = '0%';
+  });
+
+  function seekAudio(e) {
+    if (!audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  }
+
+  function setSpeed(speed) {
+    audio.playbackRate = speed;
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', parseFloat(btn.textContent) === speed);
+    });
+  }
+
+  function formatTime(sec) {
+    if (isNaN(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // Architecture Diagram Switcher
+  function setArchMode(mode) {
+    document.getElementById('tabSpoF').classList.toggle('active', mode === 'spof');
+    document.getElementById('tabResilient').classList.toggle('active', mode === 'resilient');
+    const svg = document.getElementById('archSvg');
+    const caption = document.getElementById('archCaption');
+
+    if (mode === 'spof') {
+      svg.innerHTML = `
+        <rect x="20" y="70" width="180" height="80" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="110" y="105" fill="#f1f5f9" font-size="14" font-weight="700" text-anchor="middle">Инженер / Бизнес</text>
+        <text x="110" y="128" fill="#94a3b8" font-size="12" text-anchor="middle">Все промпты и чаты</text>
+
+        <line x1="200" y1="110" x2="310" y2="110" stroke="#f87171" stroke-width="3" stroke-dasharray="6,4"/>
+        <text x="255" y="96" fill="#f87171" font-size="11" font-weight="700" text-anchor="middle">SPOF (Бан = 0)</text>
+
+        <rect x="310" y="35" width="230" height="150" rx="12" fill="#1b1420" stroke="#f87171" stroke-width="2"/>
+        <text x="425" y="68" fill="#fca5a5" font-size="15" font-weight="700" text-anchor="middle">Claude.ai (Закрытое облако)</text>
+        <text x="425" y="96" fill="#e2e8f0" font-size="12" text-anchor="middle">• Projects и файлы</text>
+        <text x="425" y="118" fill="#e2e8f0" font-size="12" text-anchor="middle">• Memory и история чатов</text>
+        <text x="425" y="140" fill="#e2e8f0" font-size="12" text-anchor="middle">• Привязка к карте и IP</text>
+
+        <line x1="540" y1="110" x2="620" y2="110" stroke="#f87171" stroke-width="2"/>
+        <rect x="620" y="70" width="180" height="80" rx="10" fill="#1f1218" stroke="#f87171" stroke-width="2"/>
+        <text x="710" y="106" fill="#f87171" font-size="14" font-weight="700" text-anchor="middle">Блокировка аккаунта</text>
+        <text x="710" y="128" fill="#cbd5e1" font-size="12" text-anchor="middle">Потеря истории и простоя</text>
+      `;
+      caption.textContent = 'Хрупкая схема: при срабатывании антифрода или регионального фильтра вы теряете доступ одновременно к модели, файлам Projects и всей истории решений.';
+    } else {
+      svg.innerHTML = `
+        <rect x="15" y="65" width="175" height="90" rx="10" fill="#0f2326" stroke="#34d399" stroke-width="2"/>
+        <text x="102" y="98" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">Own Context (Git/.md)</text>
+        <text x="102" y="120" fill="#e2e8f0" font-size="11" text-anchor="middle">База знаний + экспорт</text>
+        <text x="102" y="138" fill="#94a3b8" font-size="11" text-anchor="middle">Open WebUI / Antigravity</text>
+
+        <line x1="190" y1="110" x2="265" y2="110" stroke="#38bdf8" stroke-width="2.5"/>
+
+        <rect x="265" y="60" width="210" height="100" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="370" y="95" fill="#38bdf8" font-size="14" font-weight="700" text-anchor="middle">API Gateway / Адаптер</text>
+        <text x="370" y="118" fill="#e2e8f0" font-size="11" text-anchor="middle">OpenRouter / LiteLLM</text>
+        <text x="370" y="138" fill="#94a3b8" font-size="11" text-anchor="middle">Retry + Spend Limit + Cache</text>
+
+        <line x1="475" y1="85" x2="575" y2="45" stroke="#34d399" stroke-width="2"/>
+        <line x1="475" y1="110" x2="575" y2="110" stroke="#fbbf24" stroke-width="2"/>
+        <line x1="475" y1="135" x2="575" y2="175" stroke="#818cf8" stroke-width="2"/>
+
+        <rect x="575" y="18" width="225" height="50" rx="8" fill="#131b2e" stroke="#34d399" stroke-width="1.5"/>
+        <text x="687" y="48" fill="#f1f5f9" font-size="12" font-weight="600" text-anchor="middle">Primary: Claude (API / Bedrock)</text>
+
+        <rect x="575" y="85" width="225" height="50" rx="8" fill="#131b2e" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="687" y="115" fill="#f1f5f9" font-size="12" font-weight="600" text-anchor="middle">Fallback 1: Gemini 2.5 Pro / GPT-4o</text>
+
+        <rect x="575" y="152" width="225" height="50" rx="8" fill="#131b2e" stroke="#818cf8" stroke-width="1.5"/>
+        <text x="687" y="182" fill="#f1f5f9" font-size="12" font-weight="600" text-anchor="middle">Fallback 2: Локальный Ollama / vLLM</text>
+      `;
+      caption.textContent = 'Устойчивый стек: память и диалоги лежат у вас локально, а боты и агенты стучатся через единый шлюз с автоматическим Fallback при 429 или блокировке.';
+    }
+  }
+
+  // Migration Targets
+  const migrationTargets = {
+    openwebui: {
+      badges: ['<span class="pill pill-green">Полноценный перенос веток</span>', '<span class="pill pill-amber">Нужен Python-конвертер</span>'],
+      title: 'Open WebUI (Self-hosted интерфейс)',
+      body: 'Поддерживает нативный импорт в <code>Settings → Data Controls → Import Chats</code>, но требует древовидную схему (<code>parentId</code> / <code>childrenIds</code>). Используйте open-source утилиты вроде <code>openwebui-importer</code> для преобразования <code>conversations.json</code> или инжекта в <code>webui.db</code>.'
+    },
+    librechat: {
+      badges: ['<span class="pill pill-green">Мультимодельный чат</span>', '<span class="pill pill-amber">Маппинг JSON-схемы</span>'],
+      title: 'LibreChat (Docker стек)',
+      body: 'Позволяет держать все модели (Claude через OpenRouter, OpenAI, Gemini, Ollama) в одном интерфейсе. Скрипт маппит массив <code>chat_messages</code> из выгрузки Claude в поля <code>sender</code>, <code>endpoint</code> и <code>messageId</code>.'
+    },
+    gemini: {
+      badges: ['<span class="pill pill-red">Прямого JSON-импорта нет</span>', '<span class="pill pill-green">Идеально через Markdown + 2M контекста</span>'],
+      title: 'Google Gemini & NotebookLM',
+      body: 'Официальной кнопки импорта чатов из Claude нет. Решение: конвертируйте <code>conversations.json</code> скриптом ниже в чистые <code>.md</code> файлы по темам и загрузите их в <strong>NotebookLM</strong> или в длинный контекст Gemini.'
+    },
+    chatgpt: {
+      badges: ['<span class="pill pill-red">Прямого JSON-импорта нет</span>', '<span class="pill pill-amber">Через файлы Custom GPT / Projects</span>'],
+      title: 'ChatGPT (OpenAI)',
+      body: 'OpenAI не принимает чужой <code>conversations.json</code> в ленту чатов. Перенос работает только как передача базы знаний: переведите диалоги в <code>.md</code>/<code>.pdf</code> и прикрепите к проекту или Custom GPT.'
+    }
+  };
+
+  function selectTarget(key, btn) {
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const data = migrationTargets[key];
+    document.getElementById('targetPanel').innerHTML = `
+      <div class="target-badge-row">${data.badges.join('')}</div>
+      <h3 style="margin-top: 0.2rem; color: #fff;">${data.title}</h3>
+      <p style="margin-bottom: 0; font-size: 0.88rem;">${data.body}</p>
+    `;
+  }
+
+  // Code Tabs
+  const codeSnippets = {
+    openrouter: `import os
+from openai import OpenAI
+
+# Единый адаптер: меняете 1 строку в .env — меняете провайдера
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ["OPENROUTER_API_KEY"],
+)
+
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[
+        {"role": "system", "content": "Ты системный архитектор."},
+        {"role": "user", "content": "Разбери ошибку парсера."}
+    ],
+    extra_body={
+        # Авто-переключение, если Claude недоступен или вернул 429
+        "models": ["anthropic/claude-3.5-sonnet", "google/gemini-2.5-pro", "openai/gpt-4o"]
+    }
+)
+print(response.choices[0].message.content)`,
+    direct: `import os
+import anthropic
+
+# Обязательные заголовки x-api-key и anthropic-version SDK подставляет сам
+client = anthropic.Anthropic(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
+    # Опционально: корпоративный прокси на вашем VPS в поддерживаемом регионе
+    # base_url="https://your-vps-proxy.example.com"
+)
+
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    system=[{
+        "type": "text",
+        "text": "Статический контекст проекта...",
+        "cache_control": {"type": "ephemeral"}  # -90% на чтение из кэша
+    }],
+    messages=[{"role": "user", "content": "Проверь архитектуру бота."}]
+)
+print(response.content[0].text)`
+  };
+
+  function selectCodeTab(key, btn) {
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('codeBlock').textContent = codeSnippets[key];
+  }
+
+  // Calculator
+  function calcApiCost() {
+    const msgs = parseInt(document.getElementById('rngMsgs').value, 10);
+    const ctx = parseInt(document.getElementById('rngCtx').value, 10);
+    const mode = document.getElementById('selCache').value;
+
+    document.getElementById('lblMsgs').textContent = msgs;
+    document.getElementById('lblCtx').textContent = ctx.toLocaleString('ru-RU');
+
+    const days = 22;
+    const totalCalls = msgs * days;
+    const inputRate = 3.0 / 1000000;
+    const cacheReadRate = 0.30 / 1000000;
+    const avgOutputTokens = 600;
+    const outputRate = 15.0 / 1000000;
+
+    const costNoCache = totalCalls * (ctx * inputRate + avgOutputTokens * outputRate);
+    // С Prompt Caching: ~15% холодных записей/обновлений + 85% чтений со скидкой 90%
+    const costCached = totalCalls * (
+      (ctx * 0.15 * inputRate * 1.25) +
+      (ctx * 0.85 * cacheReadRate) +
+      avgOutputTokens * outputRate
+    );
+
+    const activeCost = mode === 'cached' ? costCached : costNoCache;
+    const diff = Math.max(0, costNoCache - costCached);
+
+    document.getElementById('resApiCost').textContent = '$' + activeCost.toFixed(2) + ' / мес';
+    document.getElementById('resCacheDiff').textContent = '-$' + diff.toFixed(2) + ' / мес';
+
+    const verdict = document.getElementById('resVerdict');
+    if (activeCost > 25) {
+      verdict.textContent = 'Для ручных чатов Pro ($20) в ' + (activeCost / 20).toFixed(1) + 'x выгоднее; API — только для автоматизации';
+      verdict.style.color = '#fbbf24';
+    } else {
+      verdict.textContent = 'Отличный баланс: API с кэшем сопоставим с Pro и без 5-ч лимитов';
+      verdict.style.color = '#34d399';
+    }
+  }
+
+  // Quiz
+  const feedbackData = {
+    1: {
+      correct: 'Верно! Open WebUI и LibreChat умеют принимать переконвертированную ветвистую историю чатов, а параллельная выгрузка в Markdown защищает знания для любой другой модели.',
+      incorrect: 'Неверно. Проприетарные веб-интерфейсы (ChatGPT/Gemini) не принимают чужой JSON как ленту чатов — нужен конвертер в Open WebUI/LibreChat или выгрузка в Markdown.'
+    },
+    2: {
+      correct: 'Точно! API не хранит состояние диалога (Stateless). На 10-м сообщении вы заново оплачиваете первые 9 сообщений, если не используете Prompt Caching.',
+      incorrect: 'Неверно. Главная причина роста счетов в API — модель Stateless: сервер не помнит прошлые сообщения, и история пересылается с каждым запросом.'
+    },
+    3: {
+      correct: 'Отлично! Слой абстракции (OpenRouter / LiteLLM) с Fallback-моделью и жёстким Spend Limit устраняет единую точку отказа и защищает бюджет от зацикливания.',
+      incorrect: 'Неверно. Хранение крупных сумм на прямом аккаунте повышает риск потери средств при блокировке, а заголовки API обязательны по протоколу.'
+    }
+  };
+
+  function checkAnswer(qNum, optIdx, isCorrect) {
+    const parent = document.getElementById('q' + qNum);
+    const opts = parent.querySelectorAll('.quiz-opt');
+    const fb = document.getElementById('q' + qNum + '-fb');
+
+    opts.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === optIdx) btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+    });
+
+    fb.className = 'quiz-feedback ' + (isCorrect ? 'show-correct' : 'show-incorrect');
+    fb.textContent = isCorrect ? feedbackData[qNum].correct : feedbackData[qNum].incorrect;
+  }
+
+  // Init
+  setArchMode('spof');
+  selectTarget('openwebui', document.querySelector('#targetPanel').previousElementSibling.children[0]);
+  selectCodeTab('openrouter', document.querySelector('#codeBlock').previousElementSibling.children[0]);
+  calcApiCost();
+</script>
+</body>
+</html>
