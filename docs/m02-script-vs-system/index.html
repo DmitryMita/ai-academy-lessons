@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <title>Модуль 2: Инженерная база «Скрипт vs Система» — AI Academy</title>
+  <link rel="stylesheet" href="../lib/book.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --card-border: #1e293b;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.2);
+      --accent: #818cf8;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #070a12;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1.15rem 4rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .back-link:hover { color: #7dd3fc; }
+
+    .badge-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-m02 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-base { background: rgba(129, 140, 248, 0.18); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.35); }
+
+    h1 {
+      font-size: clamp(1.65rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      max-width: 780px;
+    }
+
+    /* Audio Card */
+    .audio-card {
+      background: linear-gradient(145deg, #131b2e, #0e1626);
+      border: 1px solid #1e293b;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .audio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .audio-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text);
+    }
+
+    .audio-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: nowrap;
+    }
+
+    .play-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+
+    .play-btn:hover { transform: scale(1.05); background: #7dd3fc; }
+
+    .progress-bar-container {
+      flex-grow: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      min-width: 88px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .speed-selector { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+    .speed-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    /* Cards & Typography */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: clamp(1.15rem, 3vw, 1.75rem);
+      margin-bottom: 1.75rem;
+    }
+
+    h2 {
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.9rem;
+      display: block;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 1.03rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 1.15rem 0 0.5rem;
+    }
+
+    p { color: #cbd5e1; margin-bottom: 0.9rem; font-size: 0.94rem; }
+
+    ul.cheat-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin: 0.75rem 0 1rem;
+    }
+
+    ul.cheat-list li {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.72rem 0.95rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+
+    ul.cheat-list li strong { color: var(--primary); }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.84em;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.12rem 0.34rem;
+      border-radius: 4px;
+      word-break: break-word;
+    }
+
+    /* Tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .mode-tab {
+      background: #090e1a;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .mode-tab.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .mode-tab.danger.active {
+      background: rgba(248, 113, 113, 0.16);
+      border-color: var(--danger);
+      color: #fecaca;
+    }
+
+    /* SVG Arch Box */
+    .arch-box {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .arch-svg {
+      width: 100%;
+      max-width: 860px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .arch-caption {
+      margin-top: 0.8rem;
+      font-size: 0.86rem;
+      color: #94a3b8;
+      border-top: 1px solid #1e293b;
+      padding-top: 0.7rem;
+    }
+
+    /* Stage Detail Panel */
+    .stage-panel {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.15rem;
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (min-width: 680px) {
+      .stage-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .stage-box {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.8rem 0.9rem;
+    }
+
+    .stage-box-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    .lbl-analogy { color: #fbbf24; }
+    .lbl-project { color: #818cf8; }
+    .lbl-tech { color: #34d399; }
+
+    /* Tables */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    th {
+      background: #0d1527;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid #1a2333;
+      color: #e2e8f0;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* Interactive Config Line Inspector */
+    .config-inspector {
+      background: var(--code-bg);
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .config-lines {
+      padding: 0.6rem 0;
+      overflow-x: auto;
+    }
+
+    .cfg-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      width: 100%;
+      min-width: max-content;
+      background: transparent;
+      border: none;
+      border-left: 3px solid transparent;
+      padding: 0.38rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.79rem;
+      color: #cbd5e1;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+      white-space: pre;
+    }
+
+    .cfg-line:hover {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .cfg-line.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-left-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .cfg-num {
+      color: #64748b;
+      min-width: 1.5rem;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .cfg-explain {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      padding: 0.9rem 1.05rem;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+    }
+
+    .cfg-explain strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Resilience Simulator */
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 0.85rem;
+    }
+
+    @media (min-width: 680px) {
+      .sim-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .sim-col {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .sim-col.bad { border-top: 3px solid var(--danger); }
+    .sim-col.good { border-top: 3px solid var(--success); }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.55rem;
+      gap: 0.5rem;
+    }
+
+    .sim-title { font-weight: 700; font-size: 0.94rem; }
+    .sim-status {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .status-down { background: rgba(248, 113, 113, 0.18); color: #f87171; }
+    .status-up { background: rgba(52, 211, 153, 0.18); color: #34d399; }
+
+    /* Quiz */
+    .quiz-item {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 0.8rem;
+      font-size: 0.93rem;
+    }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .quiz-opt {
+      background: #131b2e;
+      border: 1px solid #1e293b;
+      color: #cbd5e1;
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .quiz-opt:hover { background: #1c263d; border-color: #334155; }
+    .quiz-opt.correct { background: rgba(52, 211, 153, 0.15) !important; border-color: #34d399 !important; color: #34d399 !important; font-weight: 600; }
+    .quiz-opt.incorrect { background: rgba(248, 113, 113, 0.15) !important; border-color: #f87171 !important; color: #f87171 !important; }
+
+    .quiz-feedback {
+      margin-top: 0.7rem;
+      font-size: 0.84rem;
+      display: none;
+      line-height: 1.45;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+    }
+
+    .quiz-feedback.show-correct { display: block; background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .quiz-feedback.show-incorrect { display: block; background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    /* Banner */
+    .lab-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.12));
+      border: 1px solid rgba(129, 140, 248, 0.35);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .lab-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #0b0f19;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .lab-btn:hover { background: #7dd3fc; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="top-bar">
+      <a href="../index.html" class="back-link">← Все уроки Академии</a>
+      <div class="badge-group">
+        <span class="badge badge-m02">Модуль 02 · Инженерная база</span>
+        <span class="badge badge-base">Трек BASE → PRO</span>
+      </div>
+    </div>
+    <h1>Инженерная база: «Скрипт vs Система»</h1>
+    <p class="subtitle">Опорная шпаргалка для выхода на уровень PRO: как превратить эксперимент на ноутбуке в надёжного цифрового сотрудника 24/7 с помощью <code>git worktree</code>, <code>Docker</code>, боевого <code>VPS</code> и <code>Nginx Reverse Proxy</code>.</p>
+  </header>
+
+  <!-- Audio Podcast Player -->
+  <div class="audio-card">
+    <div class="audio-header">
+      <div class="audio-title">
+        <span>🎧 Подкаст наставника (Edge TTS · DmitryNeural · темп -7%)</span>
+      </div>
+      <div class="speed-selector">
+        <button class="speed-btn" onclick="setSpeed(0.85)">0.85x</button>
+        <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
+        <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
+        <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+      </div>
+    </div>
+    <p class="audio-note">Нажмите Play: наставник спокойно объясняет каждый механизм через жизненные аналогии и проекты агентства, а схемы и инспектор конфигов ниже служат живой шпаргалкой.</p>
+    <audio id="lessonAudio" src="audio_summary.mp3" preload="metadata"></audio>
+    <div class="audio-controls">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Воспроизвести">▶</button>
+      <div class="progress-bar-container" id="progressContainer" onclick="seekAudio(event)">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="time-display" id="timeDisplay">00:00 / --:--</div>
+    </div>
+  </div>
+
+  <!-- Section 1: CLI, .env & git worktree -->
+  <div class="card">
+    <h2>1. Фундамент: Терминал, сейф <code>.env</code> и <code>git worktree</code></h2>
+    <ul class="cheat-list">
+      <li><strong>CLI / Shell (Терминал):</strong> Прямой текстовый пульт управления компьютером и сервером без графических оболочек.</li>
+      <li><strong><code>.env</code> (Environment Variables):</strong> Изолированный файл для API-ключей и паролей (<code>OPENAI_API_KEY</code>, <code>TELEGRAM_BOT_TOKEN</code>). Всегда добавлен в <code>.gitignore</code>, чтобы секреты не утекли в Git.</li>
+      <li><strong><code>git worktree</code>:</strong> Позволяет открыть 2–3 ветки кода одновременно в разных папках (на одном общем <code>.git</code>-хранилище), чтобы параллельные ИИ-агенты не перезаписывали файлы друг друга.</li>
+    </ul>
+
+    <div class="mode-tabs">
+      <button class="mode-tab danger active" id="tabGitConflict" onclick="setGitMode('conflict')">✗ Одна папка (Конфликт агентов)</button>
+      <button class="mode-tab" id="tabGitWorktree" onclick="setGitMode('worktree')">✓ git worktree (Параллельные столы)</button>
+    </div>
+
+    <div class="arch-box">
+      <svg class="arch-svg" viewBox="0 0 820 210" id="gitSvg" role="img" aria-label="Схема работы git worktree"></svg>
+      <div class="arch-caption" id="gitCaption"></div>
+    </div>
+  </div>
+
+  <!-- Section 2: Evolution Script -> System -->
+  <div class="card">
+    <h2>2. Эволюция кода: от скрипта на ноутбуке к системе 24/7</h2>
+    <p>Переключайте ступеньки, чтобы увидеть переход от разовой проверки идеи к масштабируемому SaaS-продукту:</p>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectStage(0, this)">1. Скрипт</button>
+      <button class="mode-tab" onclick="selectStage(1, this)">2. FastAPI-сервер</button>
+      <button class="mode-tab" onclick="selectStage(2, this)">3. Демон (systemd / cron)</button>
+      <button class="mode-tab" onclick="selectStage(3, this)">4. Очередь задач (Queue)</button>
+    </div>
+
+    <div class="stage-panel" id="stagePanel"></div>
+  </div>
+
+  <!-- Section 3: Docker & VPS + Interactive Config Inspector -->
+  <div class="card">
+    <h2>3. Docker, Ubuntu VPS и Nginx: построчный инспектор конфигов</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Инженерный термин</th>
+            <th>Простой смысл</th>
+            <th>Зачем это в проектах (n8n, боты, SaaS)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Docker Image / Container</strong></td>
+            <td>Чертёж (<em>Image</em>) и запущенная коробка (<em>Container</em>)</td>
+            <td>Запуск <code>n8n</code>, БД и агента на любом сервере за 30 сек без ошибки «у меня работало»</td>
+          </tr>
+          <tr>
+            <td><strong>Volumes &amp; Networks</strong></td>
+            <td>Внешний диск (<em>Volumes</em>) и закрытый коридор (<em>Networks</em>)</td>
+            <td>Сценарии не пропадают при обновлении, а база данных не торчит в интернет</td>
+          </tr>
+          <tr>
+            <td><strong>SSH Keys &amp; UFW Firewall</strong></td>
+            <td>Электронный чип-ключ и охранник на входе сервера</td>
+            <td>Отключаем подбор паролей; открываем только порты <code>22</code> (SSH), <code>80</code> и <code>443</code> (веб)</td>
+          </tr>
+          <tr>
+            <td><strong>Nginx Reverse Proxy + Certbot</strong></td>
+            <td>Стойка ресепшена на входе + бесплатный SSL (Let's Encrypt)</td>
+            <td>Принимает <code>https://</code>, шифрует трафик, пропускает WebSocket и шлёт запрос в порт <code>127.0.0.1</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Интерактивный разбор конфигов (нажмите на любую строку)</h3>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectConfig('compose', this)">docker-compose.yml (n8n)</button>
+      <button class="mode-tab" onclick="selectConfig('nginx', this)">nginx.conf (Reverse Proxy + SSL)</button>
+      <button class="mode-tab" onclick="selectConfig('systemd', this)">systemd + UFW (Демон и защита)</button>
+    </div>
+
+    <div class="config-inspector">
+      <div class="config-lines" id="configLines"></div>
+      <div class="cfg-explain" id="configExplain"></div>
+    </div>
+  </div>
+
+  <!-- Section 4: Polling vs Webhook & Resilience Simulator -->
+  <div class="card">
+    <h2>4. Webhooks vs Polling и Симулятор реальных сбоев</h2>
+    <ul class="cheat-list">
+      <li><strong>Polling (Опрос):</strong> Бот каждые 2 секунды сам спрашивает сервер Telegram: «Есть новые сообщения?». Тратит ресурсы впустую и даёт задержку.</li>
+      <li><strong>Webhook (Обратный вызов):</strong> Звонок в домофон. Telegram или платёжная система сама делает мгновенный <code>POST</code>-запрос на ваш <code>https://</code> адрес за Nginx — но только при наличии валидного SSL-сертификата.</li>
+    </ul>
+
+    <h3>Симулятор: что случится с бизнесом при сбое?</h3>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="runSim('lid', this)">💻 Закрыли ноутбук</button>
+      <button class="mode-tab" onclick="runSim('reboot', this)">🔌 Перезагрузка / краш кода</button>
+      <button class="mode-tab" onclick="runSim('spike', this)">⚡ Наплыв 200 заявок за 10 сек</button>
+      <button class="mode-tab" onclick="runSim('scan', this)">🛡️ Атака ботов на порт 5678</button>
+    </div>
+
+    <div class="sim-grid" id="simGrid"></div>
+  </div>
+
+  <!-- Section 5: Quick Checks -->
+  <div class="card">
+    <h2>5. Проверка понимания (Quick Checks)</h2>
+
+    <div class="quiz-item" id="q1">
+      <div class="quiz-question">1. Вы запускаете двух ИИ-агентов в репозитории одновременно: один чинит бота, второй пишет интеграцию оплаты. Какой инструмент защитит файлы от взаимной перезаписи?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(1, 0, false)">Скопировать ключи в <code>.env</code> два раза</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 1, true)"><code>git worktree</code> — отдельная рабочая папка под каждую ветку при общей истории <code>.git</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 2, false)">Запустить оба скрипта через <code>cron</code> каждую минуту</button>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q2">
+      <div class="quiz-question">2. Зачем в <code>docker-compose.yml</code> для <code>n8n</code> указывают строку <code>ports: ["127.0.0.1:5678:5678"]</code> и раздел <code>volumes</code>?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(2, 0, true)"><code>127.0.0.1</code> закрывает порт от прямого доступа из интернета (пускает только Nginx), а <code>volumes</code> сохраняет сценарии на диск при обновлении контейнера</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 1, false)">Чтобы ускорить генерацию ответов LLM в 10 раз за счёт кэша GPU</button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 2, false)">Чтобы автоматически выпустить SSL-сертификат без домена</button>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q3">
+      <div class="quiz-question">3. Почему для веб-интерфейса <code>n8n</code> за Nginx Reverse Proxy обязательно прописывают заголовки <code>Upgrade</code> и <code>Connection</code>, а на самом сервере поднимают Certbot?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(3, 0, false)">Без них не работает команда <code>git push</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 1, true)">Заголовки нужны для живого канала <code>WebSocket</code>, а Certbot даёт доверенный <code>HTTPS</code> (SSL), без которого Telegram не шлёт вебхуки</button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 2, false)">Чтобы бот перешёл с вебхуков обратно на медленный Polling</button>
+      </div>
+      <div class="quiz-feedback" id="q3-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q4">
+      <div class="quiz-question">4. Что вернёт Nginx клиенту, если ваш внутренний FastAPI-бэкенд за ним временно упал?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(4, 0, false)">Секретные ключи из файла <code>.env</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(4, 1, false)">Переключит вход по паролю SSH</button>
+        <button class="quiz-opt" onclick="checkAnswer(4, 2, true)">Аккуратный HTTP-статус <code>502 Bad Gateway</code>, пока <code>systemd</code> или <code>Docker</code> перезапускает процесс</button>
+      </div>
+      <div class="quiz-feedback" id="q4-fb"></div>
+    </div>
+  </div>
+
+  <div class="lab-banner">
+    <div>
+      <h3 style="margin: 0 0 0.4rem; color: #fff;">Боевой чек-лист перехода от Скрипта к Системе</h3>
+      <p style="margin: 0; font-size: 0.88rem;">1) Проверьте <code>.gitignore</code> — файл <code>.env</code> никогда не коммитится. 2) Опишите сервис в <code>docker-compose.yml</code> с <code>volumes</code> и <code>restart: always</code>. 3) На VPS закройте порты через <code>UFW</code> (только 22, 80, 443) и отключите пароли SSH. 4) Поставьте Nginx Reverse Proxy с <code>Certbot</code> и переключите ботов на Webhooks.</p>
+    </div>
+    <a href="../index.html" class="lab-btn">Вернуться к библиотеке уроков</a>
+  </div>
+
+  <footer>
+    <p>AI_Academy · Модуль M02 · Трек BASE → PRO (Фарук Измайлов)</p>
+  </footer>
+</div>
+
+<script>
+  // Audio Player
+  const audio = document.getElementById('lessonAudio');
+  const playBtn = document.getElementById('playBtn');
+  const progressBar = document.getElementById('progressBar');
+  const timeDisplay = document.getElementById('timeDisplay');
+
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+      playBtn.textContent = '❚❚';
+    } else {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progressBar.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+    timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    if (audio.duration) {
+      timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    playBtn.textContent = '▶';
+    progressBar.style.width = '0%';
+  });
+
+  function seekAudio(e) {
+    if (!audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  }
+
+  function setSpeed(speed) {
+    audio.playbackRate = speed;
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', parseFloat(btn.textContent) === speed);
+    });
+  }
+
+  function formatTime(sec) {
+    if (isNaN(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // Section 1: git worktree diagram
+  function setGitMode(mode) {
+    document.getElementById('tabGitConflict').classList.toggle('active', mode === 'conflict');
+    document.getElementById('tabGitWorktree').classList.toggle('active', mode === 'worktree');
+    const svg = document.getElementById('gitSvg');
+    const caption = document.getElementById('gitCaption');
+
+    if (mode === 'conflict') {
+      svg.innerHTML = `
+        <rect x="20" y="30" width="190" height="65" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="115" y="58" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Агент 1 (Telegram-бот)</text>
+        <text x="115" y="78" fill="#94a3b8" font-size="11" text-anchor="middle">Правит bot/main.py</text>
+
+        <rect x="20" y="115" width="190" height="65" rx="10" fill="#131b2e" stroke="#818cf8" stroke-width="2"/>
+        <text x="115" y="143" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Агент 2 (Оплата SaaS)</text>
+        <text x="115" y="163" fill="#94a3b8" font-size="11" text-anchor="middle">Переключает ветку git!</text>
+
+        <line x1="210" y1="62" x2="340" y2="105" stroke="#f87171" stroke-width="2.5" stroke-dasharray="5,4"/>
+        <line x1="210" y1="147" x2="340" y2="105" stroke="#f87171" stroke-width="2.5" stroke-dasharray="5,4"/>
+
+        <rect x="340" y="45" width="240" height="120" rx="12" fill="#1f1218" stroke="#f87171" stroke-width="2"/>
+        <text x="460" y="82" fill="#fca5a5" font-size="14" font-weight="700" text-anchor="middle">Одна папка /AI_Academy</text>
+        <text x="460" y="108" fill="#e2e8f0" font-size="12" text-anchor="middle">Git checkout перезаписывает файлы</text>
+        <text x="460" y="130" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">✗ Merge-конфликт и потеря правок</text>
+
+        <rect x="625" y="65" width="175" height="80" rx="10" fill="#131b2e" stroke="#64748b" stroke-width="1.5"/>
+        <text x="712" y="100" fill="#94a3b8" font-size="13" font-weight="700" text-anchor="middle">Сейф .env</text>
+        <text x="712" y="122" fill="#64748b" font-size="11" text-anchor="middle">Не попадает в Git</text>
+      `;
+      caption.textContent = 'Когда два агента работают в одной папке, переключение ветки у одного мгновенно ломает файлы у второго.';
+    } else {
+      svg.innerHTML = `
+        <rect x="15" y="55" width="185" height="100" rx="10" fill="#0f2326" stroke="#34d399" stroke-width="2"/>
+        <text x="107" y="90" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">Общая база .git</text>
+        <text x="107" y="112" fill="#e2e8f0" font-size="11" text-anchor="middle">История коммитов</text>
+        <text x="107" y="130" fill="#94a3b8" font-size="11" text-anchor="middle">без дублирования</text>
+
+        <line x1="200" y1="85" x2="290" y2="55" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="200" y1="125" x2="290" y2="155" stroke="#818cf8" stroke-width="2.5"/>
+
+        <rect x="290" y="18" width="270" height="75" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="425" y="47" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">Стол 1: /AI_Academy (main)</text>
+        <text x="425" y="69" fill="#e2e8f0" font-size="11" text-anchor="middle">Агент 1 спокойно правит бота</text>
+
+        <rect x="290" y="117" width="270" height="75" rx="10" fill="#131b2e" stroke="#818cf8" stroke-width="2"/>
+        <text x="425" y="146" fill="#a5b4fc" font-size="13" font-weight="700" text-anchor="middle">Стол 2: /wt-billing (feat/billing)</text>
+        <text x="425" y="168" fill="#e2e8f0" font-size="11" text-anchor="middle">Агент 2 строит оплату параллельно</text>
+
+        <line x1="560" y1="55" x2="625" y2="95" stroke="#34d399" stroke-width="2"/>
+        <line x1="560" y1="155" x2="625" y2="115" stroke="#34d399" stroke-width="2"/>
+
+        <rect x="625" y="65" width="180" height="80" rx="10" fill="#0f2326" stroke="#34d399" stroke-width="2"/>
+        <text x="715" y="98" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">✓ Чистый Merge</text>
+        <text x="715" y="120" fill="#e2e8f0" font-size="11" text-anchor="middle">Ноль конфликтов файлов</text>
+      `;
+      caption.textContent = 'git worktree add ../wt-billing -b feat/billing создаёт физически отдельную папку для второго агента при единой базе .git.';
+    }
+  }
+
+  // Section 2: Evolution stages
+  const stages = [
+    {
+      title: 'Ступень 1: Одноразовый Python-скрипт',
+      analogy: 'Как поручение курьеру на самокате: сбегал один раз по задаче, положил отчёт на стол и ушёл отдыхать.',
+      project: 'Быстро проверить гипотезу, спарсить 50 страниц сайта клиента или сконвертировать прайс-лист.',
+      tech: 'Команда <code>python audit.py</code>. Запускается вручную в терминале. Если закрыть окно или ноутбук — процесс мгновенно умирает.'
+    },
+    {
+      title: 'Ступень 2: Веб-сервер (FastAPI + Uvicorn)',
+      analogy: 'Постоянная стойка приёма заказов в магазине: работает круглосуточно и выдаёт ответы по единому адресу.',
+      project: 'Когда сценарий в <code>n8n</code>, <code>Make</code> или фронтенд вашего SaaS обращаются к ИИ-модулю по HTTP (<code>POST /analyze</code>).',
+      tech: '<code>uvicorn app:app --host 127.0.0.1 --port 8000</code>. Сервер держит API открытым, принимает JSON и валидирует схемы.'
+    },
+    {
+      title: 'Ступень 3: Фоновый демон (systemd и cron)',
+      analogy: 'Штатный дежурный на вахте (<code>systemd</code>) и будильник (<code>cron</code>): просыпаются сами, даже если выключили свет.',
+      project: 'Telegram-бот поддержки клиентов 24/7 или автоматическая утренняя сводка в 09:00 МСК для руководителя.',
+      tech: 'Служба Linux <code>systemd</code> с параметром <code>Restart=always</code> автоматически поднимает упавший процесс и пишет логи в <code>journalctl</code>.'
+    },
+    {
+      title: 'Ступень 4: Очередь задач (Task Queue)',
+      analogy: 'Электронная очередь в банке с талончиками: при наплыве 100 человек сервер не падает, а раздаёт номера.',
+      project: 'Генерация десятков длинных коммерческих предложений, озвучек или видео-отчётов одновременно для SaaS-клиентов.',
+      tech: '<code>FastAPI</code> мгновенно кладёт задачу в <code>Redis</code>, а фоновые <code>Workers</code> (ARQ/Celery) спокойно обрабатывают её без таймаутов HTTP.'
+    }
+  ];
+
+  function selectStage(idx, btn) {
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const st = stages[idx];
+    document.getElementById('stagePanel').innerHTML = `
+      <h3 style="margin-top:0; color:#fff;">${st.title}</h3>
+      <div class="stage-grid">
+        <div class="stage-box">
+          <span class="stage-box-label lbl-analogy">Шаг А · Аналогия</span>
+          <p style="margin:0; font-size:0.86rem;">${st.analogy}</p>
+        </div>
+        <div class="stage-box">
+          <span class="stage-box-label lbl-project">Шаг Б · Проекты</span>
+          <p style="margin:0; font-size:0.86rem;">${st.project}</p>
+        </div>
+        <div class="stage-box">
+          <span class="stage-box-label lbl-tech">Шаг В · Под капотом</span>
+          <p style="margin:0; font-size:0.86rem;">${st.tech}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Section 3: Interactive Config Inspector
+  const configs = {
+    compose: [
+      { code: 'services:', why: 'Раздел описания всех контейнеров (сервисов), которые Docker Compose поднимет одной командой docker compose up -d.' },
+      { code: '  n8n:', why: 'Имя сервиса внутри внутренней Docker-сети. Другие контейнеры смогут обращаться к нему просто по имени n8n.' },
+      { code: '    image: docker.n8n.io/n8nio/n8n:latest', why: 'Готовый Docker Image (замороженный чертёж) с Node.js и всем кодом n8n — ничего не нужно устанавливать вручную.' },
+      { code: '    restart: always', why: 'Политика живучести: если n8n упадёт от ошибки памяти или перезагрузится VPS, Docker сам запустит контейнер заново.' },
+      { code: '    ports: ["127.0.0.1:5678:5678"]', why: 'Критично для безопасности! Слушаем порт 5678 ТОЛЬКО на локальном адресе 127.0.0.1 — из интернета напрямую туда не зайти, только через Nginx.' },
+      { code: '    env_file: [".env"]', why: 'Передаём ключи шифрования, пароли базы и API-токены из скрытого сейфа .env внутрь контейнера.' },
+      { code: '    volumes: ["./n8n_data:/home/node/.n8n"]', why: 'Монтируем папку сервера внутрь контейнера: все ваши сценарии и учётные записи сохранятся при обновлении образа.' }
+    ],
+    nginx: [
+      { code: 'server {', why: 'Начало описания виртуального хоста — правил обработки входящего трафика для конкретного домена.' },
+      { code: '    listen 443 ssl;', why: 'Принимаем защищённый HTTPS-трафик на стандартный порт 443 (именно его требуют Telegram Webhooks и браузеры).' },
+      { code: '    server_name n8n.myagency.ru;', why: 'Доменное имя: если клиент зайдёт на другой домен, Nginx не перепутает проекты на одном сервере.' },
+      { code: '    ssl_certificate /etc/letsencrypt/.../fullchain.pem;', why: 'Публичный SSL-сертификат от Let\'s Encrypt, выпущенный и автопродлеваемый утилитой Certbot.' },
+      { code: '    location / {', why: 'Правило маршрутизации для всех путей сайта, начинающихся со слэша /.' },
+      { code: '        proxy_pass http://127.0.0.1:5678;', why: 'Сердце Reverse Proxy: передаём запрос с красивого HTTPS-домена внутрь закрытого локального порта приложения (при падении бэкенда клиент получит 502 Bad Gateway).' },
+      { code: '        proxy_set_header Upgrade $http_upgrade;', why: 'Обязательный заголовок для протокола WebSocket — без него в интерфейсе n8n не отображаются живые статусы узлов.' },
+      { code: '        proxy_set_header Connection "upgrade";', why: 'Подтверждает переключение обычного HTTP-соединения в постоянный двусторонний канал WebSocket.' },
+      { code: '        proxy_set_header X-Forwarded-For $remote_addr;', why: 'Передаёт приложению реальный IP-адрес клиента, чтобы логи и защита от спама видели пользователя, а не адрес самого Nginx.' }
+    ],
+    systemd: [
+      { code: '# /etc/systemd/system/ai-bot.service', why: 'Файл конфигурации системного демона Linux (systemd), который превращает Python-скрипт в неубиваемый фоновый сервис.' },
+      { code: 'ExecStart=/opt/ai_academy/.venv/bin/python -m bot.main', why: 'Точная команда запуска бота внутри виртуального окружения Python.' },
+      { code: 'EnvironmentFile=/opt/ai_academy/.env', why: 'Подгрузка секретных токенов Telegram и LLM из файла .env перед стартом сервиса.' },
+      { code: 'Restart=always', why: 'Если бот завершится с ошибкой сети или нехваткой памяти, systemd перезапустит его автоматически.' },
+      { code: 'RestartSec=5', why: 'Пауза 5 секунд перед перезапуском, чтобы не создавать бесконечный плотный цикл при временном сбое сети.' },
+      { code: '# Команды файрвола UFW на Ubuntu VPS:', why: 'Базовая защита периметра сервера (Uncomplicated Firewall) — закрывает все лишние двери.' },
+      { code: 'ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw enable', why: 'Разрешаем только SSH (22) по ключам и веб-трафик (80/443 для Certbot и Nginx). Порты 5678, 8000 и 5432 заблокированы снаружи!' }
+    ]
+  };
+
+  let activeCfgKey = 'compose';
+  function selectConfig(key, btn) {
+    activeCfgKey = key;
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderConfigLines(0);
+  }
+
+  function renderConfigLines(activeIdx) {
+    const lines = configs[activeCfgKey];
+    const container = document.getElementById('configLines');
+    container.innerHTML = lines.map((item, i) => `
+      <button class="cfg-line ${i === activeIdx ? 'active' : ''}" onclick="renderConfigLines(${i})">
+        <span class="cfg-num">${i + 1}</span><span>${escapeHtml(item.code)}</span>
+      </button>
+    `).join('');
+    document.getElementById('configExplain').innerHTML = `
+      <strong>Строка ${activeIdx + 1} · За что отвечает эта директива</strong>
+      ${escapeHtml(lines[activeIdx].why)}
+    `;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Section 4: Failure Simulator
+  const simScenarios = {
+    lid: {
+      badStatus: 'OFFLINE (0%)',
+      badText: 'Ноутбук уснул — Wi-Fi отключился. Telegram-бот и сценарии n8n перестали отвечать клиентам до утра. Вебхуки теряются.',
+      goodStatus: 'ONLINE 24/7',
+      goodText: 'Код работает на удалённом Ubuntu VPS в дата-центре. Вы можете выключить ноутбук и уехать в отпуск — система принимает заявки без перерыва.'
+    },
+    reboot: {
+      badStatus: 'УПАЛ НАВСЕГДА',
+      badText: 'Внезапная сетевая ошибка или обновление ОС прервали скрипт в консоли. Пока инженер не зайдёт вручную, сервис мёртв.',
+      goodStatus: 'АВТОПОДЪЁМ ЗА 5 СЕК',
+      goodText: 'Docker (restart: always) или systemd мгновенно перезапускает процесс, а Docker Volumes сохраняют всю базу и сценарии.'
+    },
+    spike: {
+      badStatus: 'ТАЙМАУТ 504',
+      badText: 'Один скрипт в режиме Polling или без очереди захлебнулся от 200 одновременных запросов. Клиенты видят зависший экран.',
+      goodStatus: 'ОЧЕРЕДЬ + WEBHOOK',
+      goodText: 'Nginx мгновенно раздаёт запросы, FastAPI ставит тяжёлые задачи в очередь Redis/Workers, а ответы уходят клиентам по Webhook без зависаний.'
+    },
+    scan: {
+      badStatus: 'УТЕЧКА АДМИНКИ',
+      badText: 'Порт 5678 открыт в интернет на голом IP без SSL. Сканеры находят панель, а пароли подбирают брутфорсом по SSH.',
+      goodStatus: 'ПЕРИМЕТР ЗАКРЫТ',
+      goodText: 'UFW блокирует всё кроме 22/80/443, вход по SSH-ключам, порт 5678 слушает только 127.0.0.1, а Nginx шифрует весь трафик через Certbot SSL.'
+    }
+  };
+
+  function runSim(key, btn) {
+    if (btn) {
+      btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    const s = simScenarios[key];
+    document.getElementById('simGrid').innerHTML = `
+      <div class="sim-col bad">
+        <div class="sim-header">
+          <span class="sim-title">Хрупкий скрипт на ноутбуке</span>
+          <span class="sim-status status-down">${s.badStatus}</span>
+        </div>
+        <p style="margin:0; font-size:0.86rem;">${s.badText}</p>
+      </div>
+      <div class="sim-col good">
+        <div class="sim-header">
+          <span class="sim-title">Система: VPS + Docker + Nginx</span>
+          <span class="sim-status status-up">${s.goodStatus}</span>
+        </div>
+        <p style="margin:0; font-size:0.86rem;">${s.goodText}</p>
+      </div>
+    `;
+  }
+
+  // Section 5: Quiz
+  const feedbackData = {
+    1: {
+      correct: 'Верно! git worktree создаёт каждому агенту отдельную папку для своей ветки, но использует единую историю .git — конфликтов файлов не возникает.',
+      incorrect: 'Неверно. Секреты .env и планировщик cron не решают одновременную работу в одной папке; для этого предназначен git worktree.'
+    },
+    2: {
+      correct: 'Точно! Привязка к 127.0.0.1 прячет приложение за Nginx, а volumes сохраняют данные n8n на диске сервера при любых обновлениях контейнера.',
+      incorrect: 'Неверно. 127.0.0.1 отвечает за сетевую изоляцию (доступ только с самого сервера для Nginx), а volumes — за постоянное хранение данных.'
+    },
+    3: {
+      correct: 'Отлично! Без Upgrade/Connection не работает живой WebSocket-интерфейс n8n, а без доверенного HTTPS-сертификата от Certbot Telegram заблокирует вебхуки.',
+      incorrect: 'Неверно. Эти заголовки и сертификат обеспечивают двусторонний WebSocket и обязательный для Telegram шифрованный HTTPS-канал.'
+    },
+    4: {
+      correct: 'Верно! Nginx не оставит соединение висеть и не отдаст внутренние данные, а вернёт аккуратную ошибку 502 Bad Gateway, пока бэкенд перезапускается.',
+      incorrect: 'Неверно. При падении внутреннего процесса за Reverse Proxy клиент получает стандартный ответ 502 Bad Gateway.'
+    }
+  };
+
+  function checkAnswer(qNum, optIdx, isCorrect) {
+    const parent = document.getElementById('q' + qNum);
+    const opts = parent.querySelectorAll('.quiz-opt');
+    const fb = document.getElementById('q' + qNum + '-fb');
+
+    opts.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === optIdx) btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+    });
+
+    fb.className = 'quiz-feedback ' + (isCorrect ? 'show-correct' : 'show-incorrect');
+    fb.textContent = isCorrect ? feedbackData[qNum].correct : feedbackData[qNum].incorrect;
+  }
+
+  // Initialize interactive blocks
+  window.addEventListener('DOMContentLoaded', () => {
+    setGitMode('conflict');
+    selectStage(0, document.querySelector('#stagePanel').previousElementSibling.querySelector('.mode-tab'));
+    renderConfigLines(0);
+    runSim('lid', null);
+  });
+</script>
+</body>
+</html>
