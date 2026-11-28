@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <title>Модуль 2 (PRO): Скрипт vs Система — Production VPS, Docker &amp; Nginx — AI Academy</title>
+  <link rel="stylesheet" href="../lib/book.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #131b2e;
+      --card-border: #1e293b;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.2);
+      --accent: #818cf8;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #070a12;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.5rem 1.15rem 4rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .back-link:hover { color: #7dd3fc; }
+
+    .badge-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-m02 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-pro { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.35); }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.35rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: clamp(0.95rem, 2vw, 1.08rem);
+      max-width: 800px;
+    }
+
+    /* Audio Card */
+    .audio-card {
+      background: linear-gradient(145deg, #131b2e, #0e1626);
+      border: 1px solid #1e293b;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .audio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .audio-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text);
+    }
+
+    .audio-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: nowrap;
+    }
+
+    .play-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+
+    .play-btn:hover { transform: scale(1.05); background: #7dd3fc; }
+
+    .progress-bar-container {
+      flex-grow: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      min-width: 88px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .speed-selector { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+    .speed-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    /* Cards & Typography */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: clamp(1.15rem, 3vw, 1.75rem);
+      margin-bottom: 1.75rem;
+    }
+
+    h2 {
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.9rem;
+      display: block;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 1.03rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 1.15rem 0 0.5rem;
+    }
+
+    p { color: #cbd5e1; margin-bottom: 0.9rem; font-size: 0.94rem; }
+
+    ul.cheat-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin: 0.75rem 0 1rem;
+    }
+
+    ul.cheat-list li {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.72rem 0.95rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+
+    ul.cheat-list li strong { color: var(--primary); }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.84em;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.12rem 0.34rem;
+      border-radius: 4px;
+      word-break: break-word;
+    }
+
+    /* Tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .mode-tab {
+      background: #090e1a;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .mode-tab.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .mode-tab.danger.active {
+      background: rgba(248, 113, 113, 0.16);
+      border-color: var(--danger);
+      color: #fecaca;
+    }
+
+    /* SVG Arch Box */
+    .arch-box {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .arch-svg {
+      width: 100%;
+      max-width: 860px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .arch-caption {
+      margin-top: 0.8rem;
+      font-size: 0.86rem;
+      color: #94a3b8;
+      border-top: 1px solid #1e293b;
+      padding-top: 0.7rem;
+    }
+
+    /* Stage Detail Panel */
+    .stage-panel {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.15rem;
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (min-width: 680px) {
+      .stage-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .stage-box {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.8rem 0.9rem;
+    }
+
+    .stage-box-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    .lbl-analogy { color: #fbbf24; }
+    .lbl-project { color: #818cf8; }
+    .lbl-tech { color: #34d399; }
+
+    /* Tables */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      min-width: 540px;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    th {
+      background: #0d1527;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid #1a2333;
+      color: #e2e8f0;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* Interactive Config Line Inspector */
+    .config-inspector {
+      background: var(--code-bg);
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .config-lines {
+      padding: 0.6rem 0;
+      overflow-x: auto;
+    }
+
+    .cfg-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      width: 100%;
+      min-width: max-content;
+      background: transparent;
+      border: none;
+      border-left: 3px solid transparent;
+      padding: 0.38rem 0.9rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+      white-space: pre;
+    }
+
+    .cfg-line:hover {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .cfg-line.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-left-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .cfg-num {
+      color: #64748b;
+      min-width: 1.5rem;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .cfg-explain {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      padding: 0.9rem 1.05rem;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+    }
+
+    .cfg-explain strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Terminal Debug & Incident Simulator */
+    .term-box {
+      background: #05080f;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 0.95rem 1.05rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin-top: 0.75rem;
+      line-height: 1.55;
+    }
+
+    .term-prompt { color: #34d399; }
+    .term-warn { color: #fbbf24; }
+    .term-err { color: #f87171; }
+    .term-muted { color: #64748b; }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 0.85rem;
+    }
+
+    @media (min-width: 680px) {
+      .sim-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .sim-col {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .sim-col.bad { border-top: 3px solid var(--danger); }
+    .sim-col.good { border-top: 3px solid var(--success); }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.55rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .sim-title { font-weight: 700; font-size: 0.94rem; }
+    .sim-status {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .status-down { background: rgba(248, 113, 113, 0.18); color: #f87171; }
+    .status-up { background: rgba(52, 211, 153, 0.18); color: #34d399; }
+
+    /* Quiz */
+    .quiz-item {
+      background: #090e1a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 0.8rem;
+      font-size: 0.93rem;
+    }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .quiz-opt {
+      background: #131b2e;
+      border: 1px solid #1e293b;
+      color: #cbd5e1;
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .quiz-opt:hover { background: #1c263d; border-color: #334155; }
+    .quiz-opt.correct { background: rgba(52, 211, 153, 0.15) !important; border-color: #34d399 !important; color: #34d399 !important; font-weight: 600; }
+    .quiz-opt.incorrect { background: rgba(248, 113, 113, 0.15) !important; border-color: #f87171 !important; color: #f87171 !important; }
+
+    .quiz-feedback {
+      margin-top: 0.7rem;
+      font-size: 0.84rem;
+      display: none;
+      line-height: 1.45;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+    }
+
+    .quiz-feedback.show-correct { display: block; background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .quiz-feedback.show-incorrect { display: block; background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    /* Banner */
+    .lab-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(52, 211, 153, 0.12));
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .lab-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #0b0f19;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .lab-btn:hover { background: #7dd3fc; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="top-bar">
+      <a href="../index.html" class="back-link">← Все уроки Академии</a>
+      <div class="badge-group">
+        <span class="badge badge-m02">Модуль 02 · Инженерная база</span>
+        <span class="badge badge-pro">Трек PRO</span>
+      </div>
+    </div>
+    <h1>Инженерная база: «Скрипт vs Система» (PRO)</h1>
+    <p class="subtitle">Архитектура Production-стека: <code>git worktree</code> для мультиагентной разработки, эволюция <code>FastAPI → systemd → Redis Queue</code>, <code>Docker Compose</code> с <code>healthcheck</code>, hardening Ubuntu VPS и <code>Nginx Reverse Proxy</code> с WebSocket, Certbot и Telegram Webhooks.</p>
+  </header>
+
+  <!-- Audio Podcast Player -->
+  <div class="audio-card">
+    <div class="audio-header">
+      <div class="audio-title">
+        <span>🎧 Подкаст наставника (Edge TTS · SvetlanaNeural · темп -7%)</span>
+      </div>
+      <div class="speed-selector">
+        <button class="speed-btn" onclick="setSpeed(0.85)">0.85x</button>
+        <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
+        <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
+        <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+      </div>
+    </div>
+    <p class="audio-note">Включите подкаст: наставник разбирает граничные случаи продакшна на реальных задачах агентства и оркестров, опираясь на схемы и инспектор конфигов ниже.</p>
+    <audio id="lessonAudio" src="audio_summary.mp3" preload="metadata"></audio>
+    <div class="audio-controls">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Воспроизвести">▶</button>
+      <div class="progress-bar-container" id="progressContainer" onclick="seekAudio(event)">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="time-display" id="timeDisplay">00:00 / --:--</div>
+    </div>
+  </div>
+
+  <!-- Section 1: CLI, .env Fail-Fast & git worktree -->
+  <div class="card">
+    <h2>1. Гигиена разработки: <code>.env</code> Fail-Fast и <code>git worktree</code></h2>
+    <ul class="cheat-list">
+      <li><strong><code>.env</code> + <code>pydantic-settings</code>:</strong> Секреты (<code>TELEGRAM_BOT_TOKEN</code>, <code>N8N_ENCRYPTION_KEY</code>) лежат отдельно от Git с правами <code>chmod 600 .env</code>. Валидация через <code>BaseSettings</code> даёт <em>Fail-Fast</em> при старте контейнера, а не падение на живом клиенте.</li>
+      <li><strong><code>git worktree add &lt;path&gt; -b &lt;branch&gt;</code>:</strong> Создаёт физически отдельную папку под ветку при общей базе <code>.git</code> (экономит гигабайты и изолирует агентов в Antigravity / Claude Code).</li>
+      <li><strong>Граничные правила Git:</strong> Одну ветку нельзя открыть в двух worktree сразу. После ручного удаления папки обязательно запускайте <code>git worktree prune</code>, чтобы очистить осиротевшие блокировки в <code>.git/worktrees/</code> (иначе — <code>git worktree remove</code>).</li>
+    </ul>
+
+    <div class="mode-tabs">
+      <button class="mode-tab danger active" id="tabGitConflict" onclick="setGitMode('conflict')">✗ Одна рабочая директория (Гонка агентов)</button>
+      <button class="mode-tab" id="tabGitWorktree" onclick="setGitMode('worktree')">✓ git worktree add / remove / prune</button>
+    </div>
+
+    <div class="arch-box">
+      <svg class="arch-svg" viewBox="0 0 820 215" id="gitSvg" role="img" aria-label="Схема работы git worktree"></svg>
+      <div class="arch-caption" id="gitCaption"></div>
+    </div>
+  </div>
+
+  <!-- Section 2: Evolution Script -> System -->
+  <div class="card">
+    <h2>2. Четыре ступени эволюции: от скрипта к <code>Task Queue</code></h2>
+    <p>Переключайте уровни зрелости сервиса, чтобы отследить переход от ручного запуска к отказоустойчивому стеку:</p>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectStage(0, this)">1. Script</button>
+      <button class="mode-tab" onclick="selectStage(1, this)">2. FastAPI + Uvicorn</button>
+      <button class="mode-tab" onclick="selectStage(2, this)">3. systemd / cron</button>
+      <button class="mode-tab" onclick="selectStage(3, this)">4. Redis + ARQ/Celery</button>
+    </div>
+
+    <div class="stage-panel" id="stagePanel"></div>
+  </div>
+
+  <!-- Section 3: Docker Compose Production, VPS Hardening & Nginx Reverse Proxy -->
+  <div class="card">
+    <h2>3. Docker Compose, Ubuntu VPS и Nginx Reverse Proxy (Инспектор PRO)</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Компонент</th>
+            <th>Частая ошибка (Ловушка)</th>
+            <th>Production-решение (PRO)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Docker Port Binding</strong></td>
+            <td><code>"5678:5678"</code> — Docker правит <code>iptables</code> и открывает админку в обход UFW</td>
+            <td><code>"127.0.0.1:5678:5678"</code> — доступ строго с localhost через Nginx</td>
+          </tr>
+          <tr>
+            <td><strong>Startup Race Condition</strong></td>
+            <td><code>depends_on: [postgres]</code> ждёт только старта контейнера, БД ещё не готова</td>
+            <td><code>healthcheck</code> (<code>pg_isready</code>) + <code>condition: service_healthy</code></td>
+          </tr>
+          <tr>
+            <td><strong>n8n за Reverse Proxy</strong></td>
+            <td>Устаревший <code>WEBHOOK_URL</code>, не задан <code>N8N_PROXY_HOPS</code></td>
+            <td><code>N8N_WEBHOOK_URL=https://...</code> + <code>N8N_PROXY_HOPS=1</code> (n8n v2.35+)</td>
+          </tr>
+          <tr>
+            <td><strong>Nginx WebSocket &amp; TLS</strong></td>
+            <td>Жёсткий <code>Connection "upgrade"</code>, нет <code>X-Forwarded-Proto</code>, таймаут 60s</td>
+            <td><code>map $http_upgrade $connection_upgrade</code> + <code>X-Forwarded-Proto $scheme</code> + <code>3600s</code></td>
+          </tr>
+          <tr>
+            <td><strong>SSH &amp; UFW Hardening</strong></td>
+            <td>Парольный root-вход, открытые порты 5432 / 8000 / 5678</td>
+            <td><code>Ed25519</code> + <code>PasswordAuthentication no</code> + UFW (<code>22</code>, <code>80</code>, <code>443</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Интерактивный инспектор Production-конфигов (кликните по любой строке)</h3>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="selectConfig('compose', this)">compose.yaml (n8n + Postgres)</button>
+      <button class="mode-tab" onclick="selectConfig('nginx', this)">nginx.conf (map WS + Certbot)</button>
+      <button class="mode-tab" onclick="selectConfig('systemd', this)">systemd unit + UFW / SSH</button>
+    </div>
+
+    <div class="config-inspector">
+      <div class="config-lines" id="configLines"></div>
+      <div class="cfg-explain" id="configExplain"></div>
+    </div>
+  </div>
+
+  <!-- Section 4: Diagnostics & Incident Simulator -->
+  <div class="card">
+    <h2>4. Отладка в терминале и Симулятор инцидентов (502 / 504 / Webhooks)</h2>
+    <ul class="cheat-list">
+      <li><strong><code>502 Bad Gateway</code> vs <code>504 Gateway Timeout</code>:</strong> <code>502</code> означает, что внутренний бэкенд (<code>127.0.0.1:8000</code>) мёртв или слушает другой порт; <code>504</code> — бэкенд жив, но не успел ответить за <code>proxy_read_timeout</code> (пора выносить LLM-вызов в очередь <code>Redis</code>).</li>
+      <li><strong>Telegram Webhook vs Polling:</strong> Telegram Bot API шлёт <code>POST</code> строго на валидный <code>HTTPS:443</code> (доверенный SSL от Let's Encrypt). Диагностика: метод <code>getWebhookInfo</code> показывает <code>last_error_message</code> и <code>pending_update_count</code>.</li>
+    </ul>
+
+    <h3>Симулятор инцидентов: локализуйте поломку</h3>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="runSim('502', this)">🔴 Ошибка 502 Bad Gateway</button>
+      <button class="mode-tab" onclick="runSim('504', this)">⏱️ Ошибка 504 при генерации LLM</button>
+      <button class="mode-tab" onclick="runSim('webhook', this)">🤖 Молчит Webhook Telegram / n8n</button>
+      <button class="mode-tab" onclick="runSim('ufw_bypass', this)">🛡️ Порт 5678 виден из интернета</button>
+    </div>
+
+    <div class="sim-grid" id="simGrid"></div>
+    <div class="term-box" id="termTrace"></div>
+  </div>
+
+  <!-- Section 5: Quick Checks PRO -->
+  <div class="card">
+    <h2>5. Проверка понимания (PRO Quick Checks)</h2>
+
+    <div class="quiz-item" id="q1">
+      <div class="quiz-question">1. Вы настроили UFW (разрешены только порты 22, 80, 443), но при проверке снаружи админка <code>n8n</code> на порту <code>5678</code> всё равно открывается по прямому IP сервера. В чём причина и как исправить?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(1, 0, false)">Нужно перезапустить браузер и очистить DNS-кэш</button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 1, true)">Docker пробросил порт через <code>iptables</code> в обход UFW из-за записи <code>5678:5678</code>; нужно привязать к <code>127.0.0.1:5678:5678</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(1, 2, false)">Виноват <code>certbot --nginx</code>, он открывает 5678 порт автоматически</button>
+      </div>
+      <div class="quiz-feedback" id="q1-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q2">
+      <div class="quiz-question">2. При старте стека в <code>compose.yaml</code> сервис FastAPI падает с ошибкой подключения к PostgreSQL, хотя в конфиге указано <code>depends_on: [postgres]</code>. Какое исправление устраняет эту гонку состояний?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(2, 0, true)">Добавить блоку <code>postgres</code> секцию <code>healthcheck</code> (<code>pg_isready</code>) и перевести <code>depends_on</code> в формат <code>condition: service_healthy</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 1, false)">Переместить пароли из <code>.env</code> внутрь <code>Dockerfile</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(2, 2, false)">Заменить <code>Restart=always</code> на ручной запуск через <code>cron</code></button>
+      </div>
+      <div class="quiz-feedback" id="q2-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q3">
+      <div class="quiz-question">3. После того как вы вручную удалили папку старого агента через <code>rm -rf ../wt-agent</code>, Git при создании новой ветки пишет, что ветка уже checked out. Какая команда очистит метаданные?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(3, 0, false)"><code>git checkout --force</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 1, false)"><code>docker compose down --volumes</code></button>
+        <button class="quiz-opt" onclick="checkAnswer(3, 2, true)"><code>git worktree prune</code> (удаляет устаревшие записи в <code>.git/worktrees/</code>)</button>
+      </div>
+      <div class="quiz-feedback" id="q3-fb"></div>
+    </div>
+
+    <div class="quiz-item" id="q4">
+      <div class="quiz-question">4. Вебхуки в <code>n8n</code> за Nginx генерируют ссылки с <code>http://localhost:5678</code> вместо публичного HTTPS-домена, а интерфейс не обновляет статусы узлов в реальном времени. Что нужно поправить?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="checkAnswer(4, 0, false)">Перевести бота обратно на Polling и отключить порт 443</button>
+        <button class="quiz-opt" onclick="checkAnswer(4, 1, true)">В <code>n8n</code> задать <code>N8N_WEBHOOK_URL</code> и <code>N8N_PROXY_HOPS=1</code>, а в Nginx — <code>X-Forwarded-Proto $scheme</code> и WebSocket-заголовки (<code>Upgrade</code> / <code>Connection</code> через <code>map</code>)</button>
+        <button class="quiz-opt" onclick="checkAnswer(4, 2, false)">Отключить <code>PasswordAuthentication no</code> в конфиге SSH</button>
+      </div>
+      <div class="quiz-feedback" id="q4-fb"></div>
+    </div>
+  </div>
+
+  <div class="lab-banner">
+    <div>
+      <h3 style="margin: 0 0 0.4rem; color: #fff;">Практика PRO: Подготовка к Лаборатории 2 (<code>lab02_vps_nginx_deploy</code>)</h3>
+      <p style="margin: 0; font-size: 0.88rem;">Проверочный маршрут диагностики в терминале: 1) <code>ss -tulpn</code> (порты на <code>127.0.0.1</code>); 2) <code>docker compose ps</code> (статус <code>healthy</code>); 3) <code>sudo nginx -t &amp;&amp; sudo systemctl reload nginx</code>; 4) <code>sudo ufw status</code>; 5) Проверка SSL и Telegram <code>getWebhookInfo</code>.</p>
+    </div>
+    <a href="../index.html" class="lab-btn">Вернуться к библиотеке уроков</a>
+  </div>
+
+  <footer>
+    <p>AI_Academy · Модуль M02 · Трек PRO (Дмитрий Романов)</p>
+  </footer>
+</div>
+
+<script>
+  // Audio Player
+  const audio = document.getElementById('lessonAudio');
+  const playBtn = document.getElementById('playBtn');
+  const progressBar = document.getElementById('progressBar');
+  const timeDisplay = document.getElementById('timeDisplay');
+
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+      playBtn.textContent = '❚❚';
+    } else {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progressBar.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+    timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    if (audio.duration) {
+      timeDisplay.textContent = '00:00 / ' + formatTime(audio.duration);
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    playBtn.textContent = '▶';
+    progressBar.style.width = '0%';
+  });
+
+  function seekAudio(e) {
+    if (!audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  }
+
+  function setSpeed(speed) {
+    audio.playbackRate = speed;
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', parseFloat(btn.textContent) === speed);
+    });
+  }
+
+  function formatTime(sec) {
+    if (isNaN(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // Section 1: git worktree diagram
+  function setGitMode(mode) {
+    document.getElementById('tabGitConflict').classList.toggle('active', mode === 'conflict');
+    document.getElementById('tabGitWorktree').classList.toggle('active', mode === 'worktree');
+    const svg = document.getElementById('gitSvg');
+    const caption = document.getElementById('gitCaption');
+
+    if (mode === 'conflict') {
+      svg.innerHTML = `
+        <rect x="20" y="25" width="195" height="68" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="117" y="54" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Агент 1 (Antigravity)</text>
+        <text x="117" y="75" fill="#94a3b8" font-size="11" text-anchor="middle">Правит bot/webhook.py</text>
+
+        <rect x="20" y="118" width="195" height="68" rx="10" fill="#131b2e" stroke="#818cf8" stroke-width="2"/>
+        <text x="117" y="147" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Агент 2 (Парсер сайтов)</text>
+        <text x="117" y="168" fill="#94a3b8" font-size="11" text-anchor="middle">Делает git checkout feat/parser</text>
+
+        <line x1="215" y1="59" x2="340" y2="106" stroke="#f87171" stroke-width="2.5" stroke-dasharray="5,4"/>
+        <line x1="215" y1="152" x2="340" y2="106" stroke="#f87171" stroke-width="2.5" stroke-dasharray="5,4"/>
+
+        <rect x="340" y="42" width="250" height="128" rx="12" fill="#1f1218" stroke="#f87171" stroke-width="2"/>
+        <text x="465" y="78" fill="#fca5a5" font-size="14" font-weight="700" text-anchor="middle">Одна папка /opt/AI_Academy</text>
+        <text x="465" y="104" fill="#e2e8f0" font-size="12" text-anchor="middle">Общий HEAD + индекс stage</text>
+        <text x="465" y="128" fill="#f87171" font-size="12" font-weight="700" text-anchor="middle">✗ Гонка индексов и потеря правок</text>
+        <text x="465" y="150" fill="#94a3b8" font-size="11" text-anchor="middle">Сломанный .venv / тесты</text>
+
+        <rect x="625" y="65" width="175" height="82" rx="10" fill="#131b2e" stroke="#64748b" stroke-width="1.5"/>
+        <text x="712" y="98" fill="#fbbf24" font-size="13" font-weight="700" text-anchor="middle">.env (chmod 600)</text>
+        <text x="712" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">Валидация BaseSettings</text>
+      `;
+      caption.textContent = 'В одной рабочей папке два агента делят общий HEAD и staging index — переключение ветки или git reset у одного немедленно бьёт по работе второго.';
+    } else {
+      svg.innerHTML = `
+        <rect x="15" y="48" width="195" height="118" rx="10" fill="#0f2326" stroke="#34d399" stroke-width="2"/>
+        <text x="112" y="84" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">Единый .git/</text>
+        <text x="112" y="108" fill="#e2e8f0" font-size="11" text-anchor="middle">Общие объекты и коммиты</text>
+        <text x="112" y="128" fill="#94a3b8" font-size="11" text-anchor="middle">Lock-записи в .git/worktrees</text>
+        <text x="112" y="148" fill="#38bdf8" font-size="11" text-anchor="middle">Очистка: git worktree prune</text>
+
+        <line x1="210" y1="86" x2="290" y2="55" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="210" y1="128" x2="290" y2="158" stroke="#818cf8" stroke-width="2.5"/>
+
+        <rect x="290" y="16" width="280" height="78" rx="10" fill="#131b2e" stroke="#38bdf8" stroke-width="2"/>
+        <text x="430" y="44" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">Worktree 1: /AI_Academy (main)</text>
+        <text x="430" y="66" fill="#e2e8f0" font-size="11" text-anchor="middle">Агент 1: fix/webhook (отдельный HEAD)</text>
+        <text x="430" y="82" fill="#94a3b8" font-size="10" text-anchor="middle">Свои запущенные тесты pytest</text>
+
+        <rect x="290" y="118" width="280" height="78" rx="10" fill="#131b2e" stroke="#818cf8" stroke-width="2"/>
+        <text x="430" y="146" fill="#a5b4fc" font-size="13" font-weight="700" text-anchor="middle">Worktree 2: ../wt-parser (feat/parser)</text>
+        <text x="430" y="168" fill="#e2e8f0" font-size="11" text-anchor="middle">Агент 2: изолированная папка на диске</text>
+        <text x="430" y="184" fill="#94a3b8" font-size="10" text-anchor="middle">Одну ветку нельзя чекаутить дважды</text>
+
+        <line x1="570" y1="55" x2="630" y2="95" stroke="#34d399" stroke-width="2"/>
+        <line x1="570" y1="158" x2="630" y2="115" stroke="#34d399" stroke-width="2"/>
+
+        <rect x="630" y="63" width="175" height="86" rx="10" fill="#0f2326" stroke="#34d399" stroke-width="2"/>
+        <text x="717" y="96" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">✓ Чистый PR / Merge</text>
+        <text x="717" y="118" fill="#e2e8f0" font-size="11" text-anchor="middle">git worktree remove</text>
+        <text x="717" y="135" fill="#94a3b8" font-size="10" text-anchor="middle">после слияния в main</text>
+      `;
+      caption.textContent = 'git worktree add ../wt-parser -b feat/parser даёт отдельный рабочий каталог и индекс, а git worktree remove / prune корректно освобождает ветку.';
+    }
+  }
+
+  // Section 2: Evolution stages
+  const stages = [
+    {
+      title: 'Ступень 1: Одноразовый Script',
+      analogy: 'Курьер на самокате: выехал один раз по поручению, отдал отчёт и ушёл домой.',
+      project: 'Быстрый аудит лендинга клиента или разовый экспорт базы перед миграцией.',
+      tech: '<code>python audit.py</code>. Зависит от активного терминала и открытого ноутбука. При обрыве SSH (SIGHUP) процесс погибает.'
+    },
+    {
+      title: 'Ступень 2: FastAPI + Uvicorn (Web API)',
+      analogy: 'Постоянная стойка приёма заказов: круглосуточно принимает запросы и валидирует бланки.',
+      project: 'Единый HTTP-шлюз <code>POST /webhook</code> и <code>POST /parse</code> для Telegram, фронтенда и сценариев <code>n8n</code>.',
+      tech: '<code>uvicorn app.main:app --host 127.0.0.1 --port 8000</code>. Асинхронный event loop, строгие Pydantic-схемы, graceful shutdown через <code>lifespan</code>.'
+    },
+    {
+      title: 'Ступень 3: Фоновый демон (systemd + cron)',
+      analogy: 'Штатный дежурный на вахте (<code>systemd</code>) и будильник (<code>cron</code>): поднимаются сами после любого отключения света.',
+      project: 'Неубиваемый Telegram-бот или регулярный мониторинг сайтов каждый час без ручного контроля.',
+      tech: 'Unit-файл в <code>/etc/systemd/system/</code> с <code>Restart=always</code>, <code>RestartSec=5</code> и стримом логов в <code>journalctl -u ai-bot -f</code>.'
+    },
+    {
+      title: 'Ступень 4: Очередь задач (Redis + ARQ / Celery)',
+      analogy: 'Электронная очередь с талончиками: при наплыве 100 человек стойка мгновенно выдаёт номер, не блокируя вход.',
+      project: 'Параллельная генерация 50 коммерческих предложений или тяжёлый парсинг через LLM без HTTP-таймаутов <code>504</code>.',
+      tech: 'FastAPI ставит payload в <code>Redis</code> за 3 мс и отдаёт <code>202 Accepted</code>; пул воркеров обрабатывает задачи с ретраями и dead-letter очередью.'
+    }
+  ];
+
+  function selectStage(idx, btn) {
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const st = stages[idx];
+    document.getElementById('stagePanel').innerHTML = `
+      <h3 style="margin-top:0; color:#fff;">${st.title}</h3>
+      <div class="stage-grid">
+        <div class="stage-box">
+          <span class="stage-box-label lbl-analogy">Шаг А · Аналогия</span>
+          <p style="margin:0; font-size:0.86rem;">${st.analogy}</p>
+        </div>
+        <div class="stage-box">
+          <span class="stage-box-label lbl-project">Шаг Б · Проекты</span>
+          <p style="margin:0; font-size:0.86rem;">${st.project}</p>
+        </div>
+        <div class="stage-box">
+          <span class="stage-box-label lbl-tech">Шаг В · PRO-механика</span>
+          <p style="margin:0; font-size:0.86rem;">${st.tech}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Section 3: Interactive Config Inspector (PRO)
+  const configs = {
+    compose: [
+      { code: 'services:', why: 'Современный формат compose.yaml не требует устаревшего поля version: — Compose Spec читает services напрямую.' },
+      { code: '  postgres:', why: 'Контейнер БД в закрытой внутренней сети (без секции ports наружу — доступ только внутри Docker-сети).' },
+      { code: '    image: postgres:16-alpine', why: 'Фиксируем мажорную версию образа, чтобы случайный pull не сломал формат хранилища данных.' },
+      { code: '    healthcheck:', why: 'Встроенная проверка готовности БД принимать реальные SQL-подключения, а не просто факт старта процесса.' },
+      { code: '      test: ["CMD-SHELL", "pg_isready -U postgres"]', why: 'Утилита pg_isready вернёт exit code 0 только когда PostgreSQL завершил инициализацию.' },
+      { code: '      interval: 10s', why: 'Периодичность опроса, start_period: 20s и retries: 5 исключают ложный статус unhealthy при холодном старте.' },
+      { code: '  n8n:', why: 'Оркестратор сценариев. Обращается к БД по внутреннему DNS-имени сервиса postgres:5432.' },
+      { code: '    image: docker.n8n.io/n8nio/n8n:latest', why: 'Официальный образ n8n. В сочетании с volumes обновление через pull + up -d не теряет сценарии.' },
+      { code: '    restart: unless-stopped', why: 'Автоперезапуск после падения или ребута VPS, если только контейнер не остановлен вручную администратором.' },
+      { code: '    ports: ["127.0.0.1:5678:5678"]', why: 'Критично! Без 127.0.0.1 Docker откроет порт 5678 в iptables в обход UFW. Так же пускаем трафик только через Nginx.' },
+      { code: '    environment:', why: 'Обязательные переменные для работы n8n за Reverse Proxy по свежей документации n8n v2.35+.' },
+      { code: '      - N8N_WEBHOOK_URL=https://n8n.myagency.ru/', why: 'Заменяет deprecated WEBHOOK_URL: задаёт публичный HTTPS-адрес для всех Webhook-нод.' },
+      { code: '      - N8N_PROXY_HOPS=1', why: 'Сообщает n8n, что перед ним 1 доверенный Nginx-прокси: корректно считываются X-Forwarded-For и X-Forwarded-Proto.' },
+      { code: '    depends_on:', why: 'Длинная форма depends_on гарантирует порядок запуска без Race Condition.' },
+      { code: '      postgres: { condition: service_healthy }', why: 'n8n стартует строго после того, как postgres пройдёт healthcheck.' },
+      { code: '    volumes: ["./n8n_data:/home/node/.n8n"]', why: 'Bind mount сохраняет воркфлоу, credentials и encryption key на хосте между пересборками контейнеров.' }
+    ],
+    nginx: [
+      { code: 'map $http_upgrade $connection_upgrade {', why: 'Рекомендация официальной документации NGINX: динамически задаём заголовок Connection без поломки обычных HTTP-запросов.' },
+      { code: '    default upgrade; "" close;', why: 'Если клиент прислал Upgrade: websocket — отдаём upgrade; для обычного REST/Webhook — close.' },
+      { code: '}', why: 'Блок map объявляется на уровне http {} до server {}.' },
+      { code: 'server {', why: 'Блок HTTP (порт 80) для ACME-валидации Certbot и принудительного редиректа на HTTPS.' },
+      { code: '    listen 80; server_name n8n.myagency.ru;', why: 'Привязка виртуального хоста к домену.' },
+      { code: '    location /.well-known/acme-challenge/ { root /var/www/html; }', why: 'Let\'s Encrypt проверяет владение доменом по этому пути при выпуске и автопродлении сертификата.' },
+      { code: '    location / { return 301 https://$host$request_uri; }', why: 'Любой незашифрованный HTTP-трафик перенаправляется на HTTPS.' },
+      { code: '}', why: 'Конец server-блока порта 80.' },
+      { code: 'server {', why: 'Боевой HTTPS-терминатор (порт 443) перед закрытым приложением на 127.0.0.1.' },
+      { code: '    listen 443 ssl; server_name n8n.myagency.ru;', why: 'Telegram Webhooks требуют валидный TLS на стандартном порту 443.' },
+      { code: '    ssl_certificate /etc/letsencrypt/live/n8n.myagency.ru/fullchain.pem;', why: 'Цепочка сертификата от Certbot (sudo certbot --nginx -d n8n.myagency.ru).' },
+      { code: '    location / {', why: 'Маршрутизация запросов во внутренний upstream.' },
+      { code: '        proxy_pass http://127.0.0.1:5678;', why: 'Проксируем в localhost:5678. Если бэкенд мёртв — Nginx немедленно вернёт 502 Bad Gateway.' },
+      { code: '        proxy_http_version 1.1;', why: 'WebSocket требует HTTP/1.1 (по умолчанию Nginx проксирует по HTTP/1.0).' },
+      { code: '        proxy_set_header Upgrade $http_upgrade;', why: 'Пробрасываем запрос переключения протокола для live-логов и редактора n8n.' },
+      { code: '        proxy_set_header Connection $connection_upgrade;', why: 'Используем переменную из map выше — чисто и безопасно для всех типов клиентов.' },
+      { code: '        proxy_set_header X-Forwarded-Proto $scheme;', why: 'Передаём приложению, что исходный запрос пришёл по https (иначе редиректы и cookie сломаются).' },
+      { code: '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;', why: 'Сохраняем реальный IP клиента для rate-limiting и аудита безопасности.' },
+      { code: '        proxy_read_timeout 3600s;', why: 'Увеличиваем таймаут чтения (дефолт 60s), чтобы не рвать открытые WebSocket-сессии.' },
+      { code: '    }', why: 'Закрытие location и server.' }
+    ],
+    systemd: [
+      { code: '# /etc/systemd/system/ai-bot.service', why: 'Юнит-файл системного менеджера Linux для Python-бота или FastAPI-сервиса без Docker.' },
+      { code: '[Service]', why: 'Основная секция параметров запуска, перезапуска и изоляции процесса.' },
+      { code: 'WorkingDirectory=/opt/ai_academy', why: 'Фиксирует рабочую папку процесса, чтобы относительные пути к ресурсам не сбивались.' },
+      { code: 'EnvironmentFile=/opt/ai_academy/.env', why: 'Загружает секретные токены с правами chmod 600 .env перед стартом Python.' },
+      { code: 'ExecStart=/opt/ai_academy/.venv/bin/python -m bot.main', why: 'Прямой путь к интерпретатору внутри виртуального окружения проекта.' },
+      { code: 'Restart=always', why: 'Self-healing: перезапуск при любом ненулевом коде выхода, OOM или сигнале.' },
+      { code: 'RestartSec=5', why: 'Задержка 5с защищает от мгновенного зацикливания старта при падении внешнего API.' },
+      { code: '# Hardening VPS: SSH + UFW', why: 'Минимальный чек-лист закрытия периметра Ubuntu VPS до запуска сервисов.' },
+      { code: 'sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config', why: 'Запрещаем вход по паролю — пускаем только по криптографическим ключам Ed25519.' },
+      { code: 'ufw default deny incoming && ufw allow 22,80,443/tcp && ufw enable', why: 'Закрываем все входящие порты кроме SSH (22) и веб-шлюза Nginx (80/443).' }
+    ]
+  };
+
+  let activeCfgKey = 'compose';
+  function selectConfig(key, btn) {
+    activeCfgKey = key;
+    btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderConfigLines(0);
+  }
+
+  function renderConfigLines(activeIdx) {
+    const lines = configs[activeCfgKey];
+    const container = document.getElementById('configLines');
+    container.innerHTML = lines.map((item, i) => `
+      <button class="cfg-line ${i === activeIdx ? 'active' : ''}" onclick="renderConfigLines(${i})">
+        <span class="cfg-num">${i + 1}</span><span>${escapeHtml(item.code)}</span>
+      </button>
+    `).join('');
+    document.getElementById('configExplain').innerHTML = `
+      <strong>Строка ${activeIdx + 1} · PRO-разбор директивы</strong>
+      ${escapeHtml(lines[activeIdx].why)}
+    `;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Section 4: Incident Simulator + Terminal Output
+  const simScenarios = {
+    '502': {
+      badStatus: 'HTTP 502 BAD GATEWAY',
+      badText: 'Nginx принял запрос на 443 порту, но при попытке передать его в proxy_pass http://127.0.0.1:8000 получил Connection Refused: FastAPI/бот упал или слушает другой порт.',
+      goodStatus: 'ИСПРАВЛЕНО (systemd / healthcheck)',
+      goodText: 'Проверяем порт через ss -tulpn и логи через journalctl -u ai-bot -n 50. Поднимаем сервис с Restart=always и согласованным портом upstream.',
+      term: `<span class="term-prompt">$ sudo ss -tulpn | grep 8000</span>
+<span class="term-muted"># Пусто — никто не слушает 127.0.0.1:8000!</span>
+<span class="term-prompt">$ sudo journalctl -u ai-bot -n 5 --no-pager</span>
+<span class="term-err">ValidationError: TELEGRAM_BOT_TOKEN missing in .env (Fail-Fast exit 1)</span>
+<span class="term-prompt">$ sudo systemctl restart ai-bot && curl -sI https://bot.myagency.ru/health</span>
+<span class="term-warn">HTTP/2 200 OK</span>`
+    },
+    '504': {
+      badStatus: 'HTTP 504 GATEWAY TIMEOUT',
+      badText: 'Клиентский запрос зашёл в FastAPI и синхронно ждал генерацию отчёта от LLM 75 секунд. Nginx разорвал соединение по умолчанию на 60s.',
+      goodStatus: 'ОЧЕРЕДЬ REDIS + ARQ',
+      goodText: 'API за 3 мс кладёт задачу в Redis и возвращает 202 Accepted с job_id; воркер доделывает генерацию асинхронно, результат уходит через Webhook/WebSocket.',
+      term: `<span class="term-prompt">$ sudo tail -n 2 /var/log/nginx/error.log</span>
+<span class="term-err">upstream timed out (110: Connection timed out) while reading response header from upstream</span>
+<span class="term-prompt">$ curl -X POST https://api.myagency.ru/v1/audit -d '{"url":"https://site.ru"}'</span>
+<span class="term-warn">HTTP/2 202 Accepted {"job_id": "rq_98a1f", "status": "queued"}</span>`
+    },
+    'webhook': {
+      badStatus: 'WEBHOOK SILENT / 404',
+      badText: 'Бот молчит на сообщения: в n8n указан старый WEBHOOK_URL или отсутствует N8N_PROXY_HOPS=1, либо у домена истёк / отсутствует SSL-сертификат.',
+      goodStatus: 'TLS + N8N_WEBHOOK_URL OK',
+      goodText: 'Заданы N8N_WEBHOOK_URL=https://n8n.myagency.ru/ и N8N_PROXY_HOPS=1, сертификат Let\'s Encrypt валиден, getWebhookInfo показывает 0 ошибок.',
+      term: `<span class="term-prompt">$ curl -s "https://api.telegram.org/bot$TOKEN/getWebhookInfo" | jq '{url, pending_update_count, last_error_message}'</span>
+<span class="term-err">{"url": "https://n8n.myagency.ru/webhook/tg", "pending_update_count": 14, "last_error_message": "SSL error / Wrong response 404"}</span>
+<span class="term-prompt">$ sudo certbot renew --dry-run && docker compose up -d n8n</span>
+<span class="term-warn">Congratulations, all simulated renewals succeeded. Webhook queue drained -> 0 pending.</span>`
+    },
+    'ufw_bypass': {
+      badStatus: 'PORT 5678 EXPOSED',
+      badText: 'UFW активен, но в compose.yaml написано ports: ["5678:5678"]. Docker прописал правило в цепочку DOCKER iptables, и панель торчит в интернет на 0.0.0.0:5678!',
+      goodStatus: 'BOUND TO 127.0.0.1',
+      goodText: 'Меняем на "127.0.0.1:5678:5678". Теперь ss -tulpn показывает прослушивание только на локальном loopback-интерфейсе для Nginx.',
+      term: `<span class="term-prompt">$ sudo ss -tulpn | grep 5678</span>
+<span class="term-err">tcp  LISTEN 0  4096  0.0.0.0:5678  0.0.0.0:*  users:(("docker-proxy",...))</span>
+<span class="term-muted"># После правки compose.yaml на "127.0.0.1:5678:5678" и docker compose up -d:</span>
+<span class="term-prompt">$ sudo ss -tulpn | grep 5678</span>
+<span class="term-warn">tcp  LISTEN 0  4096  127.0.0.1:5678  0.0.0.0:*  users:(("docker-proxy",...))</span>`
+    }
+  };
+
+  function runSim(key, btn) {
+    if (btn) {
+      btn.parentElement.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    const s = simScenarios[key];
+    document.getElementById('simGrid').innerHTML = `
+      <div class="sim-col bad">
+        <div class="sim-header">
+          <span class="sim-title">Симптом и причина поломки</span>
+          <span class="sim-status status-down">${s.badStatus}</span>
+        </div>
+        <p style="margin:0; font-size:0.86rem;">${s.badText}</p>
+      </div>
+      <div class="sim-col good">
+        <div class="sim-header">
+          <span class="sim-title">Инженерное решение PRO</span>
+          <span class="sim-status status-up">${s.goodStatus}</span>
+        </div>
+        <p style="margin:0; font-size:0.86rem;">${s.goodText}</p>
+      </div>
+    `;
+    document.getElementById('termTrace').innerHTML = s.term;
+  }
+
+  // Section 5: Quiz
+  const feedbackData = {
+    1: {
+      correct: 'Верно! Docker управляет правилами iptables напрямую и при записи "5678:5678" обходит UFW. Привязка "127.0.0.1:5678:5678" закрывает внешний доступ, оставляя проход только локальному Nginx.',
+      incorrect: 'Неверно. Проблема в сетевом биндинге Docker (0.0.0.0 вместо 127.0.0.1), который обходит правила UFW.'
+    },
+    2: {
+      correct: 'Точно! healthcheck (pg_isready) + depends_on с condition: service_healthy заставляет Compose дождаться полной готовности БД перед запуском FastAPI/n8n.',
+      incorrect: 'Неверно. Обычный depends_on ждёт только запуска контейнера, но не инициализации PostgreSQL — здесь нужен healthcheck + condition: service_healthy.'
+    },
+    3: {
+      correct: 'Отлично! Команда git worktree prune находит удалённые вручную каталоги и зачищает осиротевшие административные ссылки в .git/worktrees/.',
+      incorrect: 'Неверно. Если папка worktree удалена минуя git worktree remove, служебную блокировку снимает команда git worktree prune.'
+    },
+    4: {
+      correct: 'Верно! n8n v2.35+ требует N8N_WEBHOOK_URL и N8N_PROXY_HOPS=1, а Nginx должен передавать X-Forwarded-Proto $scheme и корректно апгрейдить WebSocket через map.',
+      incorrect: 'Неверно. Проблема вызвана отсутствием proxy-переменных n8n (N8N_WEBHOOK_URL, N8N_PROXY_HOPS) и WebSocket/Forwarded-заголовков на стороне Nginx.'
+    }
+  };
+
+  function checkAnswer(qNum, optIdx, isCorrect) {
+    const parent = document.getElementById('q' + qNum);
+    const opts = parent.querySelectorAll('.quiz-opt');
+    const fb = document.getElementById('q' + qNum + '-fb');
+
+    opts.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === optIdx) btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+    });
+
+    fb.className = 'quiz-feedback ' + (isCorrect ? 'show-correct' : 'show-incorrect');
+    fb.textContent = isCorrect ? feedbackData[qNum].correct : feedbackData[qNum].incorrect;
+  }
+
+  // Initialize interactive blocks
+  window.addEventListener('DOMContentLoaded', () => {
+    setGitMode('conflict');
+    selectStage(0, document.querySelector('#stagePanel').previousElementSibling.querySelector('.mode-tab'));
+    renderConfigLines(0);
+    runSim('502', null);
+  });
+</script>
+</body>
+</html>
